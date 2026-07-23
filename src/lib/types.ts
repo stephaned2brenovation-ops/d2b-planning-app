@@ -42,6 +42,7 @@ export interface Chantier {
   statut: StatutChantier;
   renfort: boolean;
   notes: string | null;
+  equipe_ids: string[];   // profil IDs des poseurs/maçons assignés
 }
 
 export interface Affectation {

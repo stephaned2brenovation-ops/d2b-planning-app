@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function addChantier(formData: FormData) {
   const client_nom = String(formData.get("client_nom") || "").trim();
   if (!client_nom) return;
+  const equipe_ids = formData.getAll("equipe_ids").map(String).filter(Boolean);
   const supabase = createClient();
   await supabase.from("chantiers").insert({
     client_nom,
@@ -15,6 +16,7 @@ export async function addChantier(formData: FormData) {
     contact_tel: String(formData.get("contact_tel") || "") || null,
     statut: String(formData.get("statut") || "a_planifier"),
     renfort: formData.get("renfort") === "on",
+    equipe_ids,
   });
   revalidatePath("/chantiers");
   revalidatePath("/");
@@ -22,6 +24,7 @@ export async function addChantier(formData: FormData) {
 
 export async function updateChantier(formData: FormData) {
   const id = String(formData.get("id"));
+  const equipe_ids = formData.getAll("equipe_ids").map(String).filter(Boolean);
   const supabase = createClient();
   await supabase.from("chantiers").update({
     client_nom: String(formData.get("client_nom") || "").trim(),
@@ -31,6 +34,7 @@ export async function updateChantier(formData: FormData) {
     contact_tel: String(formData.get("contact_tel") || "") || null,
     statut: String(formData.get("statut") || "a_planifier"),
     renfort: formData.get("renfort") === "on",
+    equipe_ids,
   }).eq("id", id);
   revalidatePath("/chantiers");
   revalidatePath("/");
