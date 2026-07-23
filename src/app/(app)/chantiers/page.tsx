@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { getMyProfil, getChantiers, getProfils } from "@/lib/queries";
 import { estBureau, STATUT_LABEL, STATUT_COLOR, type StatutChantier } from "@/lib/types";
-import { addChantier, updateChantier, deleteChantier } from "./actions";
+import { updateChantier, deleteChantier } from "./actions";
 import ConfirmButton from "@/components/ConfirmButton";
+import ChantierCreateForm from "@/components/ChantierCreateForm";
 import { redirect } from "next/navigation";
 
 const STATUTS: StatutChantier[] = ["a_planifier", "en_cours", "termine", "sav"];
@@ -21,41 +22,7 @@ export default async function ChantiersPage() {
       {/* ── Nouveau chantier ── */}
       <div style={{ background: "#fff", border: "1px solid #e7e9ee", borderRadius: 12, padding: 16, marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, marginTop: 0, marginBottom: 12 }}>Nouveau chantier</h3>
-        <form action={addChantier}>
-          <div style={grid}>
-            <input name="client_nom" placeholder="Client *" required style={inp} />
-            <input name="designation" placeholder="Désignation (ex : 1F 2vtx)" style={inp} />
-            <input name="ville" placeholder="Ville" style={inp} />
-            <input name="adresse" placeholder="Adresse (itinéraire)" style={inp} />
-            <input name="contact_tel" placeholder="Tél. contact" style={inp} />
-            <select name="statut" defaultValue="a_planifier" style={inp}>
-              {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
-            </select>
-            <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-              <input type="checkbox" name="renfort" /> Renfort (RE)
-            </label>
-          </div>
-
-          {/* Équipe poseurs/maçons */}
-          {equipe.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7686", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.4 }}>
-                Équipe (poseurs / maçons)
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {equipe.map((p) => (
-                  <label key={p.id} style={checkLbl}>
-                    <input type="checkbox" name="equipe_ids" value={p.id} />
-                    <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 5, background: p.couleur ?? "#6b7686", marginRight: 4 }} />
-                    {p.nom}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <button style={{ ...btnAdd, marginTop: 12 }}>+ Créer le chantier</button>
-        </form>
+        <ChantierCreateForm equipe={equipe} />
       </div>
 
       {/* ── Liste des chantiers ── */}

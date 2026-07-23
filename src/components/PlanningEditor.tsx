@@ -25,7 +25,7 @@ function fmtDate(iso: string, label: string) {
 
 export default function PlanningEditor(props: {
   days: Day[];
-  direction: P[]; commerciaux: P[]; secretariat: P[]; poseurs: P[]; macons: P[];
+  commerciaux: P[]; administration: P[]; menuiseries: P[]; maconnerie: P[];
   chantiers: C[]; affectations: A[]; rdv: R[]; presence: Pr[];
   livraisons: Liv[];
   editable: boolean;
@@ -293,25 +293,20 @@ export default function PlanningEditor(props: {
             </tr>
           </thead>
           <tbody>
-            {props.direction.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Comptabilité</td></tr>
-              {rdvRows(props.direction)}
-            </>}
-
             <tr><td colSpan={8} style={sec}>Commerciaux</td></tr>
             {rdvRows(props.commerciaux)}
 
-            {props.secretariat.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Secrétariat</td></tr>
-              {rdvRows(props.secretariat)}
+            {props.administration.length > 0 && <>
+              <tr><td colSpan={8} style={sec}>Administration</td></tr>
+              {rdvRows(props.administration)}
             </>}
 
-            <tr><td colSpan={8} style={sec}>Poseurs</td></tr>
-            {poseurRows(props.poseurs)}
+            <tr><td colSpan={8} style={sec}>Menuiseries Extérieures</td></tr>
+            {poseurRows(props.menuiseries)}
 
-            {props.macons.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Maçons</td></tr>
-              {poseurRows(props.macons)}
+            {props.maconnerie.length > 0 && <>
+              <tr><td colSpan={8} style={sec}>Maçonnerie Général</td></tr>
+              {poseurRows(props.maconnerie)}
             </>}
 
             <tr><td colSpan={8} style={{ ...sec, background: "#fff3e0", color: "#b45309" }}>🚚 Livraisons fournisseurs</td></tr>

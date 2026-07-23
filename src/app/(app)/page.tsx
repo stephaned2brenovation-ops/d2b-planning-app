@@ -55,11 +55,10 @@ export default async function PlanningPage({
       <PlanningEditor
         editable={editable}
         days={days.map((d, i) => ({ iso: toISO(d), label: JOURS[i], ddmm: ddmm(d), weekend: i > 4 }))}
-        direction={[...byMetier("Direction"), ...byMetier("Comptabilité")]}
-        commerciaux={byMetier("Commercial")}
-        secretariat={byMetier("Secrétariat")}
-        poseurs={byMetier("Poseur")}
-        macons={byMetier("Maçon")}
+        commerciaux={[...byMetier("Commercial"), ...byMetier("Direction")]}
+        administration={[...byMetier("Secrétariat"), ...byMetier("Comptabilité")]}
+        menuiseries={byMetier("Poseur")}
+        maconnerie={byMetier("Maçon")}
         chantiers={chantiers.map((c) => ({ id: c.id, client_nom: c.client_nom, ville: c.ville, adresse: c.adresse, designation: c.designation, statut: c.statut }))}
         affectations={affectations.map((a) => ({
           id: a.id, profil_id: a.profil_id, date: a.date, chantier_id: a.chantier_id,
