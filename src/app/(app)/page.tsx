@@ -58,7 +58,7 @@ export default async function PlanningPage({
         secretariat={byMetier("Secrétariat")}
         poseurs={byMetier("Poseur")}
         macons={byMetier("Maçon")}
-        chantiers={chantiers.map((c) => ({ id: c.id, client_nom: c.client_nom, ville: c.ville, statut: c.statut }))}
+        chantiers={chantiers.map((c) => ({ id: c.id, client_nom: c.client_nom, ville: c.ville, designation: c.designation, statut: c.statut }))}
         affectations={affectations.map((a) => ({
           id: a.id, profil_id: a.profil_id, date: a.date, chantier_id: a.chantier_id,
           client_nom: a.chantiers?.client_nom ?? "—",

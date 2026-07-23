@@ -8,7 +8,7 @@ import {
 import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
 
 type P = { id: string; nom: string; couleur: string | null };
-type C = { id: string; client_nom: string; ville: string | null; statut: StatutChantier };
+type C = { id: string; client_nom: string; ville: string | null; designation: string | null; statut: StatutChantier };
 type A = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string };
 type R = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
 type Pr = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
