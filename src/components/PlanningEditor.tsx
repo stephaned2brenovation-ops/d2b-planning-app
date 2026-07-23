@@ -156,7 +156,7 @@ export default function PlanningEditor(props: {
           <tbody>
             {/* ── Direction & Comptabilité ── */}
             {props.direction.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Direction / Comptabilité</td></tr>
+              <tr><td colSpan={8} style={sec}>Comptabilité</td></tr>
               {rdvRows(props.direction)}
             </>}
 
