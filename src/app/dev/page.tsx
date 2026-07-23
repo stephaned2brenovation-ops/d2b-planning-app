@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Page de connexion DEV uniquement — ne pas déployer en production.
  * Utilise email + mot de passe (Supabase Auth) pour bypasser le SMS OTP.
