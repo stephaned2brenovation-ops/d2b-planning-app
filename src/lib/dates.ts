@@ -46,3 +46,17 @@ export function parseISO(s: string): Date {
   const [y, mo, d] = s.split("-").map(Number);
   return new Date(y, mo - 1, d);
 }
+
+/** Lundi de la semaine ISO N de l'année Y */
+export function mondayOfISOWeek(year: number, week: number): Date {
+  const jan4 = new Date(year, 0, 4);          // 4 jan est toujours en S1
+  const m1   = mondayOf(jan4);                // lundi de S1
+  const res  = new Date(m1);
+  res.setDate(res.getDate() + (week - 1) * 7);
+  return res;
+}
+
+/** Nombre de semaines ISO dans une année (52 ou 53) */
+export function weeksInYear(year: number): number {
+  return isoWeek(new Date(year, 11, 28));     // 28 déc est toujours dans la dernière semaine
+}
