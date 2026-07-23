@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyProfil, getChantiers, getProfils } from "@/lib/queries";
 import { estBureau, STATUT_LABEL, STATUT_COLOR, type StatutChantier } from "@/lib/types";
 import { addChantier, updateChantier, deleteChantier } from "./actions";

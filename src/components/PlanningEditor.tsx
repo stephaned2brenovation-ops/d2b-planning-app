@@ -8,8 +8,8 @@ import {
 import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
 
 type P = { id: string; nom: string; couleur: string | null };
-type C = { id: string; client_nom: string; ville: string | null; designation: string | null; statut: StatutChantier };
-type A = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string };
+type C = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
+type A = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string; heure: string | null; lieu: string | null };
 type R = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
 type Pr = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
 type Liv = { date: string; fournisseur: string; description: string | null };
@@ -42,7 +42,10 @@ export default function PlanningEditor(props: {
   const [rdvLieu,  setRdvLieu]  = useState("");
   const [rdvDate,  setRdvDate]  = useState("");   // date choisie dans le modal
   const [posChantier, setPosChantier] = useState("");
-  const [posDate, setPosDate] = useState("");
+  const [posDate,     setPosDate]     = useState("");
+  const [posHeure,    setPosHeure]    = useState("");
+  const [posLieu,     setPosLieu]     = useState("");
+  const [posCreneau,  setPosCreneau]  = useState<"journee"|"matin"|"apres_midi">("journee");
 
   const run = (fn: () => Promise<unknown>) => start(async () => { await fn(); router.refresh(); });
 
@@ -54,7 +57,7 @@ export default function PlanningEditor(props: {
     setModal({ kind: "rdv", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: d.iso, label: d.label });
   }
   function openPosModal(p: P, d: Day) {
-    setPosChantier(""); setPosDate(d.iso);
+    setPosChantier(""); setPosDate(d.iso); setPosHeure(""); setPosLieu(""); setPosCreneau("journee");
     setModal({ kind: "poseur", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: d.iso, label: d.label });
   }
 
@@ -67,7 +70,7 @@ export default function PlanningEditor(props: {
   function submitPoseur(e: React.FormEvent) {
     e.preventDefault();
     if (!modal || modal.kind !== "poseur" || !posChantier) return;
-    run(() => assignAffectation(modal.pid, posChantier, posDate || modal.iso));
+    run(() => assignAffectation(modal.pid, posChantier, posDate || modal.iso, posCreneau, posHeure || null, posLieu || null));
     setModal(null);
   }
 
@@ -93,9 +96,13 @@ export default function PlanningEditor(props: {
               onDrop={editable ? () => drop(p.id, d.iso) : undefined}
               style={{ ...td, background: d.weekend ? "#fafafa" : "#fff" }}>
             {affOf(p.id, d.iso).map((a) => (
-              <div key={a.id} style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 3, background: (p.couleur ?? "#6b7686") + "18", borderRadius: 6, padding: "3px 6px", fontSize: 11.5 }}>
-                <span style={{ flex: 1, color: "#39424e", fontWeight: 600 }}>{a.client_nom}</span>
-                {editable && <b onClick={() => window.confirm("Retirer cette affectation ?") && run(() => removeAffectation(a.id))} style={xBtn}>✕</b>}
+              <div key={a.id} style={{ marginBottom: 3, background: (p.couleur ?? "#6b7686") + "18", borderRadius: 6, padding: "3px 6px", fontSize: 11.5 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                  {a.heure && <span style={{ color: "#2e77c9", fontWeight: 700, whiteSpace: "nowrap" }}>{a.heure.slice(0,5)}</span>}
+                  <span style={{ flex: 1, color: "#39424e", fontWeight: 600 }}>{a.client_nom}</span>
+                  {editable && <b onClick={() => window.confirm("Retirer cette affectation ?") && run(() => removeAffectation(a.id))} style={xBtn}>✕</b>}
+                </div>
+                {a.lieu && <div style={{ fontSize: 10.5, color: "#6b7686", marginTop: 1 }}>📍 {a.lieu}</div>}
               </div>
             ))}
             {editable && (
@@ -212,11 +219,16 @@ export default function PlanningEditor(props: {
               <div style={{ fontWeight: 700, fontSize: 17 }}>{modal.pnom}</div>
             </div>
             <form onSubmit={submitPoseur} style={{ padding: "18px 20px 16px" }}>
+
               <label style={lbl}>Date <span style={{ color: "#d0212f" }}>*</span></label>
               <input type="date" required value={posDate} onChange={(e) => setPosDate(e.target.value)} style={{ ...inp, marginBottom: 12 }} />
 
               <label style={lbl}>Chantier <span style={{ color: "#d0212f" }}>*</span></label>
-              <select required value={posChantier} onChange={(e) => setPosChantier(e.target.value)} style={{ ...inp, marginBottom: 14 }}>
+              <select required value={posChantier} onChange={(e) => {
+                setPosChantier(e.target.value);
+                const c = chantiers.find((x) => x.id === e.target.value);
+                if (c?.ville && !posLieu) setPosLieu(c.adresse ?? c.ville ?? "");
+              }} style={{ ...inp, marginBottom: 12 }}>
                 <option value="">— Sélectionner un chantier —</option>
                 {chantiers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -224,6 +236,24 @@ export default function PlanningEditor(props: {
                   </option>
                 ))}
               </select>
+
+              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={lbl}>Heure de départ</label>
+                  <input type="time" value={posHeure} onChange={(e) => setPosHeure(e.target.value)} style={inp} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={lbl}>Créneau</label>
+                  <select value={posCreneau} onChange={(e) => setPosCreneau(e.target.value as "journee"|"matin"|"apres_midi")} style={inp}>
+                    <option value="journee">Journée entière</option>
+                    <option value="matin">Matin</option>
+                    <option value="apres_midi">Après-midi</option>
+                  </select>
+                </div>
+              </div>
+
+              <label style={lbl}>Lieu / Adresse</label>
+              <input value={posLieu} onChange={(e) => setPosLieu(e.target.value)} placeholder="Adresse du chantier…" style={{ ...inp, marginBottom: 14 }} />
 
               <div style={modalFtr}>
                 <button type="button" onClick={() => setModal(null)} style={btnCancel}>Annuler</button>

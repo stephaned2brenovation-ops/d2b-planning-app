@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyProfil, getProfils } from "@/lib/queries";
 import { estBureau, ACCES_OPTIONS, METIER_OPTIONS, ROLE_LABEL, type Role } from "@/lib/types";
 import { addProfil, updateProfil, deleteProfil } from "./actions";

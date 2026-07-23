@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyProfil, getNotifConfig, getRecentNotifs } from "@/lib/queries";
 import { estBureau } from "@/lib/types";
 import { updateNotifConfig } from "./actions";

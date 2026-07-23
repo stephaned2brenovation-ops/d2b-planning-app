@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyProfil, getChantiers, getLivraisons } from "@/lib/queries";
 import { estBureau } from "@/lib/types";
 import { addLivraison, toggleLivraison, deleteLivraison } from "./actions";

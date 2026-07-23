@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyProfil, getWeek } from "@/lib/queries";
 import { weekDays, toISO, ddmm, JOURS } from "@/lib/dates";
 import { ROLE_LABEL } from "@/lib/types";

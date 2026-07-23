@@ -51,6 +51,8 @@ export interface Affectation {
   profil_id: string;
   date: string; // YYYY-MM-DD
   creneau: Creneau;
+  heure: string | null;
+  lieu: string | null;
   chantiers?: Chantier;
   profils?: Profil;
 }

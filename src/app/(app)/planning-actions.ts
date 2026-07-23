@@ -10,12 +10,14 @@ export async function assignAffectation(
   chantierId: string,
   date: string,
   creneau: Creneau = "journee",
+  heure: string | null = null,
+  lieu: string | null = null,
 ) {
   const supabase = createClient();
   const { error } = await supabase
     .from("affectations")
     .upsert(
-      { profil_id: profilId, chantier_id: chantierId, date, creneau },
+      { profil_id: profilId, chantier_id: chantierId, date, creneau, heure, lieu },
       { onConflict: "profil_id,date,creneau" },
     );
   revalidatePath("/");

@@ -4,6 +4,8 @@ import { getMyProfil } from "@/lib/queries";
 import { estBureau, ROLE_LABEL } from "@/lib/types";
 import { signOut } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profil = await getMyProfil();
 
