@@ -70,7 +70,7 @@ export async function getNotifConfig() {
   const { data } = await supabase.from("notification_config").select("*").eq("id", 1).single();
   return data as {
     veille_pose: boolean; rappel_rdv: boolean; changement: boolean; livraison: boolean;
-    heure_envoi: string; modele_sms: string;
+    heure_envoi: string; modele_sms: string; sujet_email: string | null;
   } | null;
 }
 
