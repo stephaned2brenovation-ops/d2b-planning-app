@@ -170,10 +170,6 @@ export default function PlanningEditor(props: {
               {rdvRows(props.secretariat)}
             </>}
 
-            {/* ── Présence magasin ── */}
-            <tr><td colSpan={8} style={sec}>🏬 Présence magasin</td></tr>
-            {presenceRows([...props.direction, ...props.commerciaux, ...props.secretariat])}
-
             {/* ── Poseurs ── */}
             <tr><td colSpan={8} style={sec}>Poseurs</td></tr>
             {poseurRows(props.poseurs)}
