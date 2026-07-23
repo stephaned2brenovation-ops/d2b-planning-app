@@ -17,7 +17,7 @@ export default async function PlanningPage({
   const lundiISO = toISO(days[0]);
   const dimISO = toISO(days[6]);
 
-  const [{ chantiers, affectations, rdv, presence }, profils, moi] = await Promise.all([
+  const [{ chantiers, affectations, rdv, presence, livraisons }, profils, moi] = await Promise.all([
     getWeek(lundiISO, dimISO),
     getProfils(),
     getMyProfil(),
@@ -25,6 +25,9 @@ export default async function PlanningPage({
 
   const editable = estBureau(moi?.role);
   const slim = (p: typeof profils) => p.map((x) => ({ id: x.id, nom: x.nom, couleur: x.couleur }));
+
+  // Groupement par métier (pas par rôle)
+  const byMetier = (m: string) => slim(profils.filter((p) => p.metier === m));
 
   return (
     <div>
@@ -50,10 +53,11 @@ export default async function PlanningPage({
       <PlanningEditor
         editable={editable}
         days={days.map((d, i) => ({ iso: toISO(d), label: JOURS[i], ddmm: ddmm(d), weekend: i > 4 }))}
-        commerciaux={slim(profils.filter((p) => p.role === "commercial"))}
-        secretariat={slim(profils.filter((p) => p.role === "secretariat"))}
-        poseurs={slim(profils.filter((p) => p.role === "poseur"))}
-        macons={slim(profils.filter((p) => p.role === "macon"))}
+        direction={[...byMetier("Direction"), ...byMetier("Comptabilité")]}
+        commerciaux={byMetier("Commercial")}
+        secretariat={byMetier("Secrétariat")}
+        poseurs={byMetier("Poseur")}
+        macons={byMetier("Maçon")}
         chantiers={chantiers.map((c) => ({ id: c.id, client_nom: c.client_nom, ville: c.ville, statut: c.statut }))}
         affectations={affectations.map((a) => ({
           id: a.id, profil_id: a.profil_id, date: a.date, chantier_id: a.chantier_id,
@@ -61,6 +65,7 @@ export default async function PlanningPage({
         }))}
         rdv={rdv.map((r) => ({ id: r.id, profil_id: r.profil_id, date: r.date, titre: r.titre, heure: r.heure }))}
         presence={presence.map((p) => ({ profil_id: p.profil_id, date: p.date, lieu: p.lieu }))}
+        livraisons={livraisons.map((l) => ({ date: l.date, fournisseur: l.fournisseur, description: l.description }))}
       />
 
       <p style={{ color: "#6b7686", fontSize: 12, marginTop: 10 }}>

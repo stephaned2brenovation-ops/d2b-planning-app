@@ -12,14 +12,17 @@ type C = { id: string; client_nom: string; ville: string | null; statut: StatutC
 type A = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string };
 type R = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
 type Pr = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
+type Liv = { date: string; fournisseur: string; description: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
 export default function PlanningEditor(props: {
   days: Day[];
-  commerciaux: P[]; secretariat: P[]; poseurs: P[]; macons: P[];
-  chantiers: C[]; affectations: A[]; rdv: R[]; presence: Pr[]; editable: boolean;
+  direction: P[]; commerciaux: P[]; secretariat: P[]; poseurs: P[]; macons: P[];
+  chantiers: C[]; affectations: A[]; rdv: R[]; presence: Pr[];
+  livraisons: Liv[];
+  editable: boolean;
 }) {
-  const { days, chantiers, affectations, rdv, presence, editable } = props;
+  const { days, chantiers, affectations, rdv, presence, livraisons, editable } = props;
   const router = useRouter();
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
@@ -99,7 +102,7 @@ export default function PlanningEditor(props: {
     presence.find((p) => p.profil_id === pid && p.date === iso)?.lieu ?? "";
 
   function presenceRows(list: P[]) {
-    if (!list.length) return null;
+    if (!list.length) return <tr><td style={tdLbl}>—</td><td colSpan={7} style={{ ...td, color: "#c4cad4" }}>Aucun</td></tr>;
     return list.map((p) => (
       <tr key={"pres-" + p.id}>
         <td style={{ ...tdLbl, borderLeft: `5px solid ${p.couleur ?? "#6b7686"}`, color: p.couleur ?? "#39424e" }}>{p.nom}</td>
@@ -151,16 +154,57 @@ export default function PlanningEditor(props: {
             </tr>
           </thead>
           <tbody>
+            {/* ── Direction & Comptabilité ── */}
+            {props.direction.length > 0 && <>
+              <tr><td colSpan={8} style={sec}>Direction / Comptabilité</td></tr>
+              {rdvRows(props.direction)}
+            </>}
+
+            {/* ── Commerciaux ── */}
             <tr><td colSpan={8} style={sec}>Commerciaux</td></tr>
             {rdvRows(props.commerciaux)}
-            <tr><td colSpan={8} style={sec}>Secrétariat</td></tr>
-            {rdvRows(props.secretariat)}
+
+            {/* ── Secrétariat ── */}
+            {props.secretariat.length > 0 && <>
+              <tr><td colSpan={8} style={sec}>Secrétariat</td></tr>
+              {rdvRows(props.secretariat)}
+            </>}
+
+            {/* ── Présence magasin ── */}
             <tr><td colSpan={8} style={sec}>🏬 Présence magasin</td></tr>
-            {presenceRows(props.commerciaux)}
+            {presenceRows([...props.direction, ...props.commerciaux, ...props.secretariat])}
+
+            {/* ── Poseurs ── */}
             <tr><td colSpan={8} style={sec}>Poseurs</td></tr>
             {poseurRows(props.poseurs)}
-            <tr><td colSpan={8} style={sec}>Maçons</td></tr>
-            {poseurRows(props.macons)}
+
+            {/* ── Maçons ── */}
+            {props.macons.length > 0 && <>
+              <tr><td colSpan={8} style={sec}>Maçons</td></tr>
+              {poseurRows(props.macons)}
+            </>}
+
+            {/* ── Livraisons fournisseurs ── */}
+            <tr><td colSpan={8} style={{ ...sec, background: "#fff3e0", color: "#b45309" }}>🚚 Livraisons fournisseurs</td></tr>
+            <tr>
+              <td style={{ ...tdLbl, color: "#b45309", fontWeight: 700 }}>Livraisons</td>
+              {days.map((d) => {
+                const livs = livraisons.filter((l) => l.date === d.iso);
+                return (
+                  <td key={d.iso} style={{ ...td, background: livs.length ? "#fff8ed" : d.weekend ? "#fafafa" : "#fff" }}>
+                    {livs.map((l, i) => (
+                      <div key={i} style={{ marginBottom: 3 }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fed7aa", borderRadius: 6, padding: "2px 7px", fontSize: 11, fontWeight: 600, color: "#92400e" }}>
+                          🚚 {l.fournisseur}
+                        </span>
+                        {l.description && <div style={{ fontSize: 10.5, color: "#92400e", marginTop: 2, marginLeft: 2 }}>{l.description}</div>}
+                      </div>
+                    ))}
+                    {!livs.length && <span style={{ color: "#d4c5a9", fontSize: 11 }}>—</span>}
+                  </td>
+                );
+              })}
+            </tr>
           </tbody>
         </table>
       </div>
