@@ -81,7 +81,7 @@ export async function getRecentNotifs() {
     .select("id, message, statut, date_concernee, envoye_le, profils(nom)")
     .order("cree_le", { ascending: false })
     .limit(30);
-  return (data ?? []) as {
+  return (data ?? []) as unknown as {
     id: string; message: string; statut: string;
     date_concernee: string | null; envoye_le: string | null; profils?: { nom: string };
   }[];
