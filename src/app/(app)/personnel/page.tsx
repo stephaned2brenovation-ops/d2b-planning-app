@@ -63,14 +63,27 @@ export default async function PersonnelPage() {
               </select>
             </div>
 
+            {/* Email */}
+            <div style={{ width: 180 }}>
+              <label style={lbl}>Email</label>
+              <div style={hint}>Pour la connexion à l'app (bureau uniquement)</div>
+              <input
+                name="email"
+                type="email"
+                placeholder="prenom@d2b.fr"
+                title="Email de connexion — uniquement pour Direction, Secrétariat, Commercial, Comptabilité"
+                style={inp}
+              />
+            </div>
+
             {/* Téléphone */}
-            <div style={{ width: 155 }}>
+            <div style={{ width: 145 }}>
               <label style={lbl}>Téléphone</label>
-              <div style={hint}>Numéro mobile pour SMS de planning</div>
+              <div style={hint}>Mobile pour SMS planning</div>
               <input
                 name="telephone"
                 placeholder="06 12 34 56 78"
-                title="Numéro de téléphone mobile (utilisé pour l'envoi des SMS de planning)"
+                title="Numéro de téléphone mobile"
                 style={inp}
               />
             </div>
@@ -84,7 +97,7 @@ export default async function PersonnelPage() {
       <div style={{ background: "#fff", border: "1px solid #e7e9ee", borderRadius: 12, overflow: "hidden" }}>
 
         {/* En-tête */}
-        <div style={{ display: "grid", gridTemplateColumns: "14px 1fr 160px 160px 155px 90px 36px", gap: 8, padding: "8px 12px", background: "#f4f5f7", fontSize: 11, fontWeight: 700, color: "#6b7686", textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "14px 1fr 140px 140px 170px 130px 80px 36px", gap: 8, padding: "8px 12px", background: "#f4f5f7", fontSize: 11, fontWeight: 700, color: "#6b7686", textTransform: "uppercase", letterSpacing: 0.5 }}>
           <span />
           <div>
             <div>Nom</div>
@@ -92,15 +105,19 @@ export default async function PersonnelPage() {
           </div>
           <div>
             <div>Métier</div>
-            <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Poste dans l'entreprise</div>
+            <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Poste</div>
           </div>
           <div>
             <div>Accès</div>
             <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Ce qu'il/elle peut faire</div>
           </div>
           <div>
+            <div>Email</div>
+            <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Connexion app</div>
+          </div>
+          <div>
             <div>Téléphone</div>
-            <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Mobile pour SMS</div>
+            <div style={{ fontWeight: 400, fontSize: 10, textTransform: "none", letterSpacing: 0, color: "#9aa3ad" }}>Mobile SMS</div>
           </div>
           <span />
           <span />
@@ -112,7 +129,7 @@ export default async function PersonnelPage() {
           const accesActuel = ACCES_OPTIONS.find(a => a.role === p.role);
 
           return (
-            <div key={p.id} style={{ display: "grid", gridTemplateColumns: "14px 1fr 160px 160px 155px 90px 36px", gap: 8, alignItems: "center", padding: "8px 12px", borderTop: "1px solid #f4f5f7", background: estMoi ? "#f8f9fd" : undefined }}>
+            <div key={p.id} style={{ display: "grid", gridTemplateColumns: "14px 1fr 140px 140px 170px 130px 80px 36px", gap: 8, alignItems: "center", padding: "8px 12px", borderTop: "1px solid #f4f5f7", background: estMoi ? "#f8f9fd" : undefined }}>
               <span style={{ width: 12, height: 12, borderRadius: 6, background: p.couleur ?? "#6b7686", display: "block" }} />
 
               <form action={updateProfil} style={{ display: "contents" }}>
@@ -141,6 +158,23 @@ export default async function PersonnelPage() {
                       <option key={a.role} value={a.role}>{a.label}</option>
                     ))}
                   </select>
+                )}
+
+                {/* Email */}
+                {(p.role === "poseur" || p.role === "macon") ? (
+                  <>
+                    <input type="hidden" name="email" value="" />
+                    <span style={{ ...inp, color: "#9aa3ad", fontSize: 12 }}>—</span>
+                  </>
+                ) : (
+                  <input
+                    name="email"
+                    type="email"
+                    defaultValue={p.email ?? ""}
+                    placeholder="email@d2b.fr"
+                    title="Email de connexion à l'application"
+                    style={{ ...inp, ...(p.email ? {} : { borderColor: "#b9770e", background: "#fff8e6" }) }}
+                  />
                 )}
 
                 {/* Téléphone */}

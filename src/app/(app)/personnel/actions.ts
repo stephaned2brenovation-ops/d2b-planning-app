@@ -20,14 +20,15 @@ function normalTel(v: string) {
 }
 
 export async function addProfil(formData: FormData) {
-  const nom = String(formData.get("nom") || "").trim();
+  const nom    = String(formData.get("nom")    || "").trim();
   if (!nom) return;
   const role   = String(formData.get("role")   || "poseur");
   const metier = String(formData.get("metier") || "").trim() || null;
+  const email  = String(formData.get("email")  || "").trim() || null;
   const tel    = normalTel(String(formData.get("telephone") || ""));
   const supabase = createClient();
   await supabase.from("profils").insert({
-    nom, role, metier, telephone: tel || null, couleur: couleurPour(nom),
+    nom, role, metier, email, telephone: tel || null, couleur: couleurPour(nom),
   });
   revalidatePath("/personnel");
   revalidatePath("/");
@@ -38,10 +39,11 @@ export async function updateProfil(formData: FormData) {
   const nom    = String(formData.get("nom")    || "").trim();
   const role   = String(formData.get("role")   || "poseur");
   const metier = String(formData.get("metier") || "").trim() || null;
+  const email  = String(formData.get("email")  || "").trim() || null;
   const tel    = normalTel(String(formData.get("telephone") || ""));
   const supabase = createClient();
   await supabase.from("profils")
-    .update({ nom, role, metier, telephone: tel || null })
+    .update({ nom, role, metier, email, telephone: tel || null })
     .eq("id", id);
   revalidatePath("/personnel");
   revalidatePath("/");

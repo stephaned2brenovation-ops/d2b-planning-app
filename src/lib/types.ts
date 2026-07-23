@@ -26,6 +26,7 @@ export interface Profil {
   nom: string;
   role: Role;
   metier: string | null;   // intitulé métier libre (direction, comptabilité…)
+  email: string | null;
   telephone: string | null;
   couleur: string | null;
   actif: boolean;
