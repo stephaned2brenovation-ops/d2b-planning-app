@@ -137,7 +137,7 @@ export default async function PlanningPage({
               adresse: c.adresse, designation: c.designation, statut: c.statut,
             }))}
             affectations={affData}
-            rdv={rdv.map((r) => ({ id: r.id, profil_id: r.profil_id, date: r.date, titre: r.titre, heure: r.heure }))}
+            rdv={rdv.map((r) => ({ id: r.id, profil_id: r.profil_id, date: r.date, titre: r.titre, heure: r.heure, lieu: r.lieu ?? null }))}
             presence={presence.map((p) => ({ profil_id: p.profil_id, date: p.date, lieu: p.lieu }))}
             livraisons={livraisons.map((l) => ({ date: l.date, fournisseur: l.fournisseur, description: l.description }))}
           />

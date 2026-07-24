@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition, useState } from "react";
 import {
-  assignAffectation, removeAffectation, addRdv, removeRdv,
+  assignAffectation, removeAffectation, addRdv, updateRdv, removeRdv,
 } from "@/app/(app)/planning-actions";
 import { STATUT_COLOR, type StatutChantier } from "@/lib/types";
 import { IconBriefcase, IconClipboard, IconHardHat, IconTruck, IconPin } from "@/components/icons";
@@ -11,12 +11,12 @@ import { IconBriefcase, IconClipboard, IconHardHat, IconTruck, IconPin } from "@
 type P   = { id: string; nom: string; couleur: string | null };
 type C   = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
 type A   = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string; heure: string | null; lieu: string | null };
-type R   = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
+type R   = { id: string; profil_id: string; date: string; titre: string; heure: string | null; lieu?: string | null };
 type Pr  = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
 type Liv = { date: string; fournisseur: string; description: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
-type RdvModal = { kind: "rdv";    pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
+type RdvModal = { kind: "rdv";    pid: string; pnom: string; pcouleur: string | null; iso: string; label: string; rdvId?: string };
 type PosModal = { kind: "poseur"; pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
 
 const _now = new Date();
@@ -63,6 +63,10 @@ export default function PlanningEditor(props: {
     setRdvTitre(""); setRdvHeure(""); setRdvLieu(""); setRdvDate(d.iso);
     setModal({ kind: "rdv", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: d.iso, label: d.label });
   }
+  function openRdvEdit(p: P, r: R) {
+    setRdvTitre(r.titre); setRdvHeure(r.heure?.slice(0, 5) ?? ""); setRdvLieu(r.lieu ?? ""); setRdvDate(r.date);
+    setModal({ kind: "rdv", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: r.date, label: "", rdvId: r.id });
+  }
   function openPosModal(p: P, d: Day) {
     setPosChantier(""); setPosDate(d.iso); setPosHeure(""); setPosLieu(""); setPosCreneau("journee");
     setModal({ kind: "poseur", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: d.iso, label: d.label });
@@ -71,7 +75,12 @@ export default function PlanningEditor(props: {
   function submitRdv(e: React.FormEvent) {
     e.preventDefault();
     if (!modal || modal.kind !== "rdv" || !rdvTitre.trim()) return;
-    run(() => addRdv(modal.pid, rdvDate || modal.iso, rdvTitre.trim(), rdvHeure || null, rdvLieu || null));
+    const date = rdvDate || modal.iso;
+    if (modal.rdvId) {
+      run(() => updateRdv(modal.rdvId!, date, rdvTitre.trim(), rdvHeure || null, rdvLieu || null));
+    } else {
+      run(() => addRdv(modal.pid, date, rdvTitre.trim(), rdvHeure || null, rdvLieu || null));
+    }
     setModal(null);
   }
   function submitPoseur(e: React.FormEvent) {
@@ -158,7 +167,10 @@ export default function PlanningEditor(props: {
           return (
             <td key={d.iso} style={{ ...td, background: isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff", borderTop: isToday ? "2px solid #fbbf24" : undefined }}>
               {rdvOf(p.id, d.iso).map((r) => (
-                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, background: "#fff", border: "1px solid #e8ebf0", borderLeft: "3px solid #2563eb", borderRadius: 6, padding: "3px 7px", fontSize: 11.5, boxShadow: "0 1px 2px rgba(0,0,0,.03)" }}>
+                <div key={r.id}
+                     onClick={editable ? () => openRdvEdit(p, r) : undefined}
+                     title={editable ? "Cliquer pour modifier" : undefined}
+                     style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, background: "#fff", border: "1px solid #e8ebf0", borderLeft: "3px solid #2563eb", borderRadius: 6, padding: "3px 7px", fontSize: 11.5, boxShadow: "0 1px 2px rgba(0,0,0,.03)", cursor: editable ? "pointer" : "default" }}>
                   {r.heure && (
                     <span style={{ color: "#1d4ed8", fontWeight: 700, fontSize: 10.5 }}>
                       {r.heure.slice(0, 5)}
@@ -166,7 +178,7 @@ export default function PlanningEditor(props: {
                   )}
                   <span style={{ flex: 1, color: "#1e293b", fontWeight: 600 }}>{r.titre}</span>
                   {editable && (
-                    <span onClick={() => window.confirm("Supprimer ce RDV ?") && run(() => removeRdv(r.id))}
+                    <span onClick={(e) => { e.stopPropagation(); window.confirm("Supprimer ce RDV ?") && run(() => removeRdv(r.id)); }}
                           style={{ color: "#94a3b8", cursor: "pointer", fontSize: 12, lineHeight: 1 }}>✕</span>
                   )}
                 </div>
@@ -191,7 +203,7 @@ export default function PlanningEditor(props: {
         <div style={overlay} onClick={() => setModal(null)}>
           <div style={card} onClick={(e) => e.stopPropagation()}>
             <div style={{ ...modalHdr, background: `linear-gradient(135deg, ${headerColor}, ${headerColor}cc)` }}>
-              <div style={{ fontSize: 11, opacity: 0.8, textTransform: "uppercase", letterSpacing: 0.5 }}>Nouveau RDV</div>
+              <div style={{ fontSize: 11, opacity: 0.8, textTransform: "uppercase", letterSpacing: 0.5 }}>{modal.rdvId ? "Modifier le RDV" : "Nouveau RDV"}</div>
               <div style={{ fontWeight: 700, fontSize: 18, marginTop: 2 }}>{modal.pnom}</div>
             </div>
             <form onSubmit={submitRdv} style={{ padding: "20px 22px 18px" }}>

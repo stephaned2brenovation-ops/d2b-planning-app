@@ -53,6 +53,22 @@ export async function addRdv(
   revalidatePath("/");
 }
 
+export async function updateRdv(
+  id: string,
+  date: string,
+  titre: string,
+  heure: string | null,
+  lieu: string | null,
+) {
+  if (!titre.trim()) return;
+  const supabase = createClient();
+  await supabase.from("rdv").update({
+    date, titre: titre.trim(),
+    heure: heure || null, lieu: lieu || null,
+  }).eq("id", id);
+  revalidatePath("/");
+}
+
 export async function removeRdv(id: string) {
   const supabase = createClient();
   await supabase.from("rdv").delete().eq("id", id);
