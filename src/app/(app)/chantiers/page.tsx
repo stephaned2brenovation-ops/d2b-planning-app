@@ -64,6 +64,38 @@ export default async function ChantiersPage() {
               </div>
             )}
 
+            {/* Re-planification */}
+            <details style={{ marginTop: 10 }}>
+              <summary style={{ fontSize: 12, color: "#2563eb", cursor: "pointer", fontWeight: 600 }}>
+                📅 Ajouter / modifier des jours planifiés
+              </summary>
+              <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", padding: "10px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e7e9ee" }}>
+                <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ fontWeight: 600, color: "#6b7686" }}>Du</span>
+                  <input type="date" name="date_debut" style={inp} />
+                </label>
+                <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ fontWeight: 600, color: "#6b7686" }}>Au</span>
+                  <input type="date" name="date_fin" style={inp} />
+                </label>
+                <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ fontWeight: 600, color: "#6b7686" }}>Créneau</span>
+                  <select name="creneau_pose" defaultValue="journee" style={inp}>
+                    <option value="journee">Journée</option>
+                    <option value="matin">Matin</option>
+                    <option value="apres_midi">Après-midi</option>
+                  </select>
+                </label>
+                <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ fontWeight: 600, color: "#6b7686" }}>Heure</span>
+                  <input type="time" name="heure_pose" style={inp} />
+                </label>
+                <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 5, paddingBottom: 6 }}>
+                  <input type="checkbox" name="ouvrables" value="true" defaultChecked /> Jours ouvrables
+                </label>
+              </div>
+            </details>
+
             <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
               <button style={btnSave}>Enregistrer</button>
               <ConfirmButton formAction={deleteChantier} message={`Supprimer le chantier ${c.client_nom} ?`} style={btnDel}>Supprimer</ConfirmButton>

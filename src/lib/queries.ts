@@ -33,7 +33,7 @@ export async function getLivraisons(): Promise<Livraison[]> {
 // Toutes les données d'une semaine (du lundi au dimanche inclus)
 export async function getWeek(lundiISO: string, dimancheISO: string) {
   const supabase = createClient();
-  const [chantiers, affectations, rdv, presence, livraisons] = await Promise.all([
+  const [chantiers, affectations, rdv, presence, livraisons, prochaines] = await Promise.all([
     supabase.from("chantiers").select("*"),
     supabase
       .from("affectations")
@@ -55,6 +55,12 @@ export async function getWeek(lundiISO: string, dimancheISO: string) {
       .select("*, chantiers(*)")
       .gte("date", lundiISO)
       .lte("date", dimancheISO),
+    // Prochaines affectations hors de la semaine courante (pour les chantiers non planifiés)
+    supabase
+      .from("affectations")
+      .select("chantier_id, date")
+      .gt("date", dimancheISO)
+      .order("date"),
   ]);
   return {
     chantiers: (chantiers.data ?? []) as Chantier[],
@@ -62,6 +68,7 @@ export async function getWeek(lundiISO: string, dimancheISO: string) {
     rdv: (rdv.data ?? []) as Rdv[],
     presence: (presence.data ?? []) as Presence[],
     livraisons: (livraisons.data ?? []) as Livraison[],
+    prochaines: (prochaines.data ?? []) as { chantier_id: string; date: string }[],
   };
 }
 

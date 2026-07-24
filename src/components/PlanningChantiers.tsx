@@ -16,14 +16,31 @@ type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 const TODAY = new Date().toISOString().slice(0, 10);
 const JOUR3 = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
+const JOURS_LONG = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+const MOIS_COURT = ["jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sep", "oct", "nov", "déc"];
+
+function formatDate(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  return `${JOURS_LONG[d.getDay()]} ${d.getDate()} ${MOIS_COURT[d.getMonth()]}`;
+}
+
 export default function PlanningChantiers(props: {
   days: Day[];
   chantiers: C[];
   affectations: A[];
   equipe: P[];
   editable: boolean;
+  prochaines?: { chantier_id: string; date: string }[];
 }) {
   const { days, chantiers, affectations, equipe, editable } = props;
+
+  // Première prochaine date par chantier (affectations hors semaine courante)
+  const prochaineDateByChantier = new Map<string, string>();
+  for (const p of props.prochaines ?? []) {
+    if (!prochaineDateByChantier.has(p.chantier_id)) {
+      prochaineDateByChantier.set(p.chantier_id, p.date);
+    }
+  }
   const [modal, setModal] = useState<null | "new" | C>(null);
 
   const profilById = new Map(equipe.map((p) => [p.id, p]));
@@ -85,6 +102,18 @@ export default function PlanningChantiers(props: {
             </button>
           )}
         </div>
+
+        {/* Prochaine date si aucune affectation cette semaine */}
+        {membres.length === 0 && (() => {
+          const prochaine = prochaineDateByChantier.get(c.id);
+          return prochaine ? (
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "3px 10px", fontWeight: 700 }}>
+                📅 Planifié le {formatDate(prochaine)}
+              </span>
+            </div>
+          ) : null;
+        })()}
 
         {/* Équipe */}
         <div style={{ marginTop: 12 }}>

@@ -12,7 +12,11 @@ function plage(debut: string, fin: string, ouvrables: boolean): string[] {
   while (cur <= end) {
     const dow = cur.getDay();
     if (!ouvrables || (dow !== 0 && dow !== 6)) {
-      dates.push(cur.toISOString().slice(0, 10));
+      // Utiliser les composantes locales pour éviter le décalage UTC (France UTC+1/+2)
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, "0");
+      const d = String(cur.getDate()).padStart(2, "0");
+      dates.push(`${y}-${m}-${d}`);
     }
     cur.setDate(cur.getDate() + 1);
   }

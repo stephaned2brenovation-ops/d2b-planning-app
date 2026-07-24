@@ -22,7 +22,7 @@ export default async function PlanningPage({
   const lundiISO = toISO(days[0]);
   const dimISO   = toISO(days[6]);
 
-  const [{ chantiers, affectations, rdv, presence, livraisons }, profils, moi] = await Promise.all([
+  const [{ chantiers, affectations, rdv, presence, livraisons, prochaines }, profils, moi] = await Promise.all([
     getWeek(lundiISO, dimISO),
     getProfils(),
     getMyProfil(),
@@ -112,6 +112,7 @@ export default async function PlanningPage({
             affectations={affData}
             equipe={equipe}
             editable={editable}
+            prochaines={prochaines}
           />
           {editable && (
             <p className="mob-hide" style={{ color: "#64748b", fontSize: 12, marginTop: 10 }}>
