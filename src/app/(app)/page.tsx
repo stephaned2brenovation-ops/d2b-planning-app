@@ -17,7 +17,7 @@ export default async function PlanningPage({
 }: {
   searchParams: { week?: string; vue?: string };
 }) {
-  const vueParam = searchParams.vue ?? "chantiers"; // "chantiers" | "equipes"
+  const vueParam = searchParams.vue ?? "equipes"; // "chantiers" | "equipes"
   const ref = searchParams.week ? new Date(searchParams.week + "T00:00:00") : new Date();
   const days = weekDays(ref);
   const lundiISO = toISO(days[0]);
