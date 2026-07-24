@@ -5,7 +5,8 @@ import { useTransition, useState } from "react";
 import {
   assignAffectation, removeAffectation, addRdv, removeRdv,
 } from "@/app/(app)/planning-actions";
-import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
+import { STATUT_COLOR, type StatutChantier } from "@/lib/types";
+import { IconBriefcase, IconClipboard, IconHardHat, IconTruck, IconPin } from "@/components/icons";
 
 type P   = { id: string; nom: string; couleur: string | null };
 type C   = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
@@ -22,10 +23,10 @@ const TODAY = new Date().toISOString().slice(0, 10);
 
 /* ── Couleurs par section ── */
 const SEC = {
-  commerciaux:   { bg: "#eff6ff", border: "#2563eb", color: "#1e3a8a", icon: "👔" },
-  administration:{ bg: "#f5f3ff", border: "#7c3aed", color: "#4c1d95", icon: "📋" },
-  ouvriers:      { bg: "#fffbeb", border: "#d97706", color: "#78350f", icon: "🔨" },
-  livraisons:    { bg: "#fff7ed", border: "#ea580c", color: "#7c2d12", icon: "🚚" },
+  commerciaux:   { bg: "#f8fafc", border: "#2563eb", color: "#1e40af" },
+  administration:{ bg: "#f8fafc", border: "#7c3aed", color: "#5b21b6" },
+  ouvriers:      { bg: "#f8fafc", border: "#d97706", color: "#92400e" },
+  livraisons:    { bg: "#f8fafc", border: "#ea580c", color: "#9a3412" },
 } as const;
 
 export default function PlanningEditor(props: {
@@ -109,26 +110,28 @@ export default function PlanningEditor(props: {
                 onDrop={editable ? () => drop(p.id, d.iso) : undefined}
                 style={{ ...td, background: isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff", borderTop: isToday ? "2px solid #fbbf24" : undefined }}>
               {affOf(p.id, d.iso).map((a) => (
-                <div key={a.id} style={{ marginBottom: 4, background: (p.couleur ?? "#6b7686") + "1a", border: `1px solid ${p.couleur ?? "#6b7686"}30`, borderRadius: 7, padding: "4px 7px", fontSize: 11.5 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div key={a.id} style={{ marginBottom: 3, background: "#fff", border: "1px solid #e8ebf0", borderLeft: `3px solid ${p.couleur ?? "#6b7686"}`, borderRadius: 6, padding: "3px 7px", fontSize: 11.5, boxShadow: "0 1px 2px rgba(0,0,0,.03)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     {a.heure && (
-                      <span style={{ background: "#2563eb", color: "#fff", borderRadius: 4, padding: "0 5px", fontSize: 10.5, fontWeight: 700 }}>
+                      <span style={{ color: "#1d4ed8", fontWeight: 700, fontSize: 10.5 }}>
                         {a.heure.slice(0, 5)}
                       </span>
                     )}
                     <span style={{ flex: 1, fontWeight: 600, color: "#1e293b" }}>{a.client_nom}</span>
                     {editable && (
                       <span onClick={() => window.confirm("Retirer cette affectation ?") && run(() => removeAffectation(a.id))}
-                            style={{ color: "#d0212f", cursor: "pointer", fontSize: 13, lineHeight: 1, opacity: 0.6 }}>✕</span>
+                            style={{ color: "#94a3b8", cursor: "pointer", fontSize: 12, lineHeight: 1 }}>✕</span>
                     )}
                   </div>
-                  {a.lieu && <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>📍 {a.lieu}</div>}
+                  {a.lieu && (
+                    <div style={{ fontSize: 10, color: "#64748b", marginTop: 1, display: "flex", alignItems: "center", gap: 3 }}>
+                      <IconPin size={10} /> {a.lieu}
+                    </div>
+                  )}
                 </div>
               ))}
               {editable && (
-                <button onClick={() => openPosModal(p, d)} style={addBtnChantier}>
-                  + Chantier
-                </button>
+                <button onClick={() => openPosModal(p, d)} className="cell-add" style={addBtn} title="Affecter un chantier">＋</button>
               )}
             </td>
           );
@@ -154,21 +157,21 @@ export default function PlanningEditor(props: {
           return (
             <td key={d.iso} style={{ ...td, background: isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff", borderTop: isToday ? "2px solid #fbbf24" : undefined }}>
               {rdvOf(p.id, d.iso).map((r) => (
-                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 7, padding: "4px 7px", fontSize: 11.5 }}>
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, background: "#fff", border: "1px solid #e8ebf0", borderLeft: "3px solid #2563eb", borderRadius: 6, padding: "3px 7px", fontSize: 11.5, boxShadow: "0 1px 2px rgba(0,0,0,.03)" }}>
                   {r.heure && (
-                    <span style={{ background: "#2563eb", color: "#fff", borderRadius: 4, padding: "0 5px", fontSize: 10.5, fontWeight: 700 }}>
+                    <span style={{ color: "#1d4ed8", fontWeight: 700, fontSize: 10.5 }}>
                       {r.heure.slice(0, 5)}
                     </span>
                   )}
-                  <span style={{ flex: 1, color: "#1e3a8a", fontWeight: 600 }}>{r.titre}</span>
+                  <span style={{ flex: 1, color: "#1e293b", fontWeight: 600 }}>{r.titre}</span>
                   {editable && (
                     <span onClick={() => window.confirm("Supprimer ce RDV ?") && run(() => removeRdv(r.id))}
-                          style={{ color: "#d0212f", cursor: "pointer", fontSize: 13, lineHeight: 1, opacity: 0.6 }}>✕</span>
+                          style={{ color: "#94a3b8", cursor: "pointer", fontSize: 12, lineHeight: 1 }}>✕</span>
                   )}
                 </div>
               ))}
               {editable && (
-                <button onClick={() => openRdvModal(p, d)} style={addBtnRdv}>+ RDV</button>
+                <button onClick={() => openRdvModal(p, d)} className="cell-add" style={addBtn} title="Ajouter un RDV">＋</button>
               )}
             </td>
           );
@@ -314,17 +317,17 @@ export default function PlanningEditor(props: {
           <tbody>
 
             {/* COMMERCIAUX */}
-            <SectionRow label="Commerciaux" s={SEC.commerciaux} />
+            <SectionRow label="Commerciaux" s={SEC.commerciaux} icon={<IconBriefcase size={13} />} />
             {rdvRows(props.commerciaux)}
 
             {/* ADMINISTRATION */}
             {props.administration.length > 0 && <>
-              <SectionRow label="Administration" s={SEC.administration} />
+              <SectionRow label="Administration" s={SEC.administration} icon={<IconClipboard size={13} />} />
               {rdvRows(props.administration)}
             </>}
 
             {/* OUVRIERS DU BÂTIMENT — groupés par métier */}
-            <SectionRow label="Ouvriers du bâtiment" s={SEC.ouvriers} />
+            <SectionRow label="Ouvriers du bâtiment" s={SEC.ouvriers} icon={<IconHardHat size={13} />} />
             {props.ouvriers.length === 0 && (
               <tr><td style={tdLbl}>—</td>
                 <td colSpan={7} style={{ ...td, color: "#c4cad4", fontStyle: "italic", fontSize: 12 }}>Aucun</td>
@@ -337,7 +340,7 @@ export default function PlanningEditor(props: {
             ))}
 
             {/* LIVRAISONS */}
-            <SectionRow label="Livraisons fournisseurs" s={SEC.livraisons} />
+            <SectionRow label="Livraisons fournisseurs" s={SEC.livraisons} icon={<IconTruck size={13} />} />
             <tr>
               <td style={{ ...tdLbl, color: SEC.livraisons.color, fontWeight: 700, fontSize: 11 }}>Livraisons</td>
               {days.map((d) => {
@@ -347,8 +350,8 @@ export default function PlanningEditor(props: {
                   <td key={d.iso} style={{ ...td, background: livs.length ? "#fff7ed" : isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff" }}>
                     {livs.map((l, i) => (
                       <div key={i} style={{ marginBottom: 3 }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fed7aa", border: "1px solid #fb923c", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, color: "#7c2d12" }}>
-                          🚚 {l.fournisseur}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #fdba74", borderLeft: "3px solid #ea580c", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600, color: "#9a3412" }}>
+                          <IconTruck size={11} /> {l.fournisseur}
                         </span>
                         {l.description && <div style={{ fontSize: 10.5, color: "#92400e", marginTop: 2, marginLeft: 2 }}>{l.description}</div>}
                       </div>
@@ -371,10 +374,10 @@ function MetierRows({ metier, children }: { metier: string; children: React.Reac
     <>
       <tr>
         <td colSpan={8} style={{
-          background: "#fefce8", padding: "3px 14px 3px 26px",
-          fontSize: 10.5, fontWeight: 700, color: "#a16207",
-          textTransform: "uppercase", letterSpacing: 0.6,
-          borderLeft: "4px solid #fcd34d",
+          background: "#fcfcfd", padding: "3px 14px 3px 26px",
+          fontSize: 10.5, fontWeight: 700, color: "#94a3b8",
+          textTransform: "uppercase", letterSpacing: 0.8,
+          borderLeft: "4px solid #e2e8f0",
         }}>
           {metier}
         </td>
@@ -384,19 +387,21 @@ function MetierRows({ metier, children }: { metier: string; children: React.Reac
   );
 }
 
-function SectionRow({ label, s }: { label: string; s: typeof SEC[keyof typeof SEC] }) {
+function SectionRow({ label, s, icon }: { label: string; s: typeof SEC[keyof typeof SEC]; icon: React.ReactNode }) {
   return (
     <tr>
       <td colSpan={8} style={{
         background: s.bg,
         borderLeft: `4px solid ${s.border}`,
-        padding: "7px 14px",
+        padding: "8px 14px",
         fontWeight: 700, fontSize: 11.5, letterSpacing: 0.5,
         color: s.color,
         textTransform: "uppercase",
         borderTop: "2px solid #f1f5f9",
       }}>
-        {s.icon} {label}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+          {icon} {label}
+        </span>
       </td>
     </tr>
   );
@@ -440,13 +445,9 @@ const btnOk: React.CSSProperties = {
   padding: "9px 22px", border: 0, borderRadius: 10,
   color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700,
 };
-const addBtnRdv: React.CSSProperties = {
-  fontSize: 11, borderRadius: 6, padding: "2px 8px", cursor: "pointer",
-  border: "1px dashed #93c5fd", color: "#2563eb", background: "#eff6ff",
-  marginTop: 2, display: "block", width: "100%", textAlign: "left",
-};
-const addBtnChantier: React.CSSProperties = {
-  fontSize: 11, borderRadius: 6, padding: "2px 8px", cursor: "pointer",
-  border: "1px dashed #a3e635", color: "#365314", background: "#f7fee7",
-  marginTop: 2, display: "block", width: "100%", textAlign: "left",
+const addBtn: React.CSSProperties = {
+  fontSize: 13, borderRadius: 6, padding: "1px 0", cursor: "pointer",
+  border: 0, color: "#94a3b8", background: "transparent",
+  display: "block", width: "100%", textAlign: "center", fontWeight: 600,
+  lineHeight: 1.4,
 };

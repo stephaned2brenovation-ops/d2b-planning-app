@@ -17,6 +17,20 @@ html, body {
 
 * { box-sizing: border-box; }
 
+/* ── Planning : bouton + discret dans les cellules ── */
+.cell-add {
+  opacity: 0.22;
+  transition: opacity .12s, background .12s;
+}
+td:hover .cell-add,
+.cell-add:focus-visible {
+  opacity: 1;
+}
+.cell-add:hover {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
 /* ── Mobile responsive ── */
 @media (max-width: 640px) {
   /* Header : icônes seulement dans la nav */

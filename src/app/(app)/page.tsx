@@ -10,6 +10,7 @@ import { getWeek, getProfils, getMyProfil } from "@/lib/queries";
 import { copyPreviousWeek } from "./planning-actions";
 import { weekDays, toISO, ddmm, JOURS, mondayOf } from "@/lib/dates";
 import { estBureau } from "@/lib/types";
+import { IconCopy, IconBuilding } from "@/components/icons";
 
 export default async function PlanningPage({
   searchParams,
@@ -92,12 +93,12 @@ export default async function PlanningPage({
           <>
             <form action={copyPreviousWeek}>
               <input type="hidden" name="monday" value={lundiISO} />
-              <button style={{ fontSize: 13, background: "#4c5766", color: "#fff", padding: "8px 12px", borderRadius: 8, border: 0, fontWeight: 600, cursor: "pointer" }}>
-                📑 Dupliquer la semaine préc.
+              <button style={{ fontSize: 13, background: "#4c5766", color: "#fff", padding: "8px 12px", borderRadius: 8, border: 0, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <IconCopy size={13} /> Dupliquer la semaine préc.
               </button>
             </form>
-            <Link href="/chantiers" style={{ fontSize: 13, background: "#d0212f", color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontWeight: 600 }}>
-              🏗️ Gérer les chantiers
+            <Link href="/chantiers" style={{ fontSize: 13, background: "#d0212f", color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <IconBuilding size={13} /> Gérer les chantiers
             </Link>
           </>
         )}

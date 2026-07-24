@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { IconBuilding, IconUsers } from "@/components/icons";
 
 export default function PlanningTabNav({ vue, bureau }: { vue: string; bureau: boolean }) {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function PlanningTabNav({ vue, bureau }: { vue: string; bureau: b
 
   return (
     <div style={{ display: "flex", gap: 3, background: "#e2e8f0", borderRadius: 11, padding: 4, flexShrink: 0 }}>
-      <Tab active={vue === "chantiers"} onClick={() => goTo("chantiers")}>📋 Chantiers</Tab>
-      <Tab active={vue === "equipes"}   onClick={() => goTo("equipes")}>👥 Équipes</Tab>
+      <Tab active={vue === "chantiers"} onClick={() => goTo("chantiers")}><IconBuilding size={14} /> Chantiers</Tab>
+      <Tab active={vue === "equipes"}   onClick={() => goTo("equipes")}><IconUsers size={14} /> Équipes</Tab>
     </div>
   );
 }
@@ -39,6 +40,9 @@ function Tab({ active, onClick, children }: { active: boolean; onClick: () => vo
         boxShadow: active ? "0 1px 4px rgba(0,0,0,.1)" : "none",
         transition: "all .15s",
         whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
       }}
     >
       {children}
