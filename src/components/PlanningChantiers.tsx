@@ -90,37 +90,52 @@ export default function PlanningChantiers(props: {
                 const isos = [...(pm!.get(pid) ?? [])].sort();
                 const heure = heureByCP.get(c.id + "|" + pid);
                 return (
-                  <div key={pid} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div key={pid} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <div style={{
                       width: 26, height: 26, borderRadius: "50%",
                       background: p.couleur ?? "#6b7686",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, fontWeight: 700, color: "#fff", flexShrink: 0,
+                      fontSize: 10, fontWeight: 700, color: "#fff", flexShrink: 0, marginTop: 1,
                     }}>
                       {p.nom.slice(0, 2).toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Nom + métier */}
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
                         {p.nom}
                         {p.metier && <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}> · {p.metier}</span>}
-                        {heure && <span style={{ fontSize: 11, color: "#2563eb", fontWeight: 600 }}> · {heure}</span>}
                       </div>
-                      {/* Jours */}
-                      <div style={{ display: "flex", gap: 3, marginTop: 2, flexWrap: "wrap" }}>
+                      {/* Jours avec date complète + heure */}
+                      <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
                         {isos.map((iso) => {
                           const d = dayLabelByIso.get(iso);
-                          const dow = new Date(iso + "T00:00:00").getDay();
+                          const dt = new Date(iso + "T00:00:00");
+                          const dow = dt.getDay();
+                          const jourLabel = d ? d.label : JOUR3[dow];
+                          const jour = iso.slice(8, 10);
+                          const mois = iso.slice(5, 7);
                           const isToday = iso === TODAY;
                           return (
                             <span key={iso} style={{
-                              fontSize: 10, padding: "1px 6px", borderRadius: 4, fontWeight: 600,
+                              fontSize: 10.5, padding: "2px 7px", borderRadius: 5, fontWeight: 700,
                               background: isToday ? "#fbbf24" : "#eff6ff",
                               color: isToday ? "#78350f" : "#1d4ed8",
+                              border: isToday ? "1px solid #f59e0b" : "1px solid #bfdbfe",
+                              letterSpacing: 0.2,
                             }}>
-                              {d ? d.label.slice(0, 3) : JOUR3[dow]} {iso.slice(8, 10)}
+                              {jourLabel} {jour}/{mois}
                             </span>
                           );
                         })}
+                        {heure && (
+                          <span style={{
+                            fontSize: 10.5, padding: "2px 8px", borderRadius: 5, fontWeight: 700,
+                            background: "#f0fdf4", color: "#15803d",
+                            border: "1px solid #86efac",
+                          }}>
+                            🕐 {heure}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
