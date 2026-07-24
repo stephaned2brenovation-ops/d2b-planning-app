@@ -69,7 +69,7 @@ export default async function PlanningPage({
   const affData = affectations.map((a) => ({
     id: a.id, profil_id: a.profil_id, date: a.date, chantier_id: a.chantier_id,
     client_nom: a.chantiers?.client_nom ?? "—",
-    heure: a.heure ?? null, lieu: a.lieu ?? null,
+    heure: a.heure ?? null, lieu: a.lieu ?? null, creneau: a.creneau ?? null,
   }));
 
   return (

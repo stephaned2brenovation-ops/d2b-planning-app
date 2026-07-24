@@ -10,7 +10,7 @@ type C   = {
   designation: string | null; contact_tel: string | null; statut: StatutChantier;
   renfort: boolean; notes: string | null; equipe_ids: string[];
 };
-type A   = { id: string; profil_id: string; date: string; chantier_id: string; heure: string | null };
+type A   = { id: string; profil_id: string; date: string; chantier_id: string; heure: string | null; creneau: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -31,14 +31,22 @@ export default function PlanningChantiers(props: {
 
   // chantier_id → (profil_id → Set<iso>)
   const idx = new Map<string, Map<string, Set<string>>>();
-  const heureByCP = new Map<string, string>(); // chantier|profil → heure
+  const heureByCP    = new Map<string, string>(); // chantier|profil → heure
+  const creneauByCP  = new Map<string, string>(); // chantier|profil → creneau
   for (const a of affectations) {
     if (!idx.has(a.chantier_id)) idx.set(a.chantier_id, new Map());
     const pm = idx.get(a.chantier_id)!;
     if (!pm.has(a.profil_id)) pm.set(a.profil_id, new Set());
     pm.get(a.profil_id)!.add(a.date);
-    if (a.heure) heureByCP.set(a.chantier_id + "|" + a.profil_id, a.heure.slice(0, 5));
+    if (a.heure)    heureByCP.set(a.chantier_id + "|" + a.profil_id, a.heure.slice(0, 5));
+    if (a.creneau)  creneauByCP.set(a.chantier_id + "|" + a.profil_id, a.creneau);
   }
+
+  const CRENEAU_LABEL: Record<string, { label: string; bg: string; color: string; border: string }> = {
+    matin:      { label: "Matin",      bg: "#fefce8", color: "#854d0e", border: "#fde047" },
+    apres_midi: { label: "Après-midi", bg: "#fff7ed", color: "#9a3412", border: "#fb923c" },
+    journee:    { label: "Journée",    bg: "#f0fdf4", color: "#15803d", border: "#86efac" },
+  };
 
   const actifs   = chantiers.filter((c) => idx.has(c.id));
   const inactifs = chantiers.filter((c) => !idx.has(c.id));
@@ -87,8 +95,10 @@ export default function PlanningChantiers(props: {
               {membres.map((pid) => {
                 const p = profilById.get(pid);
                 if (!p) return null;
-                const isos = [...(pm!.get(pid) ?? [])].sort();
-                const heure = heureByCP.get(c.id + "|" + pid);
+                const isos    = [...(pm!.get(pid) ?? [])].sort();
+                const heure   = heureByCP.get(c.id + "|" + pid);
+                const creneau = creneauByCP.get(c.id + "|" + pid);
+                const crInfo  = creneau ? CRENEAU_LABEL[creneau] : null;
                 return (
                   <div key={pid} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <div style={{
@@ -127,11 +137,20 @@ export default function PlanningChantiers(props: {
                             </span>
                           );
                         })}
+                        {crInfo && (
+                          <span style={{
+                            fontSize: 10.5, padding: "2px 8px", borderRadius: 5, fontWeight: 700,
+                            background: crInfo.bg, color: crInfo.color,
+                            border: `1px solid ${crInfo.border}`,
+                          }}>
+                            {crInfo.label}
+                          </span>
+                        )}
                         {heure && (
                           <span style={{
                             fontSize: 10.5, padding: "2px 8px", borderRadius: 5, fontWeight: 700,
-                            background: "#f0fdf4", color: "#15803d",
-                            border: "1px solid #86efac",
+                            background: "#eff6ff", color: "#1d4ed8",
+                            border: "1px solid #bfdbfe",
                           }}>
                             🕐 {heure}
                           </span>
