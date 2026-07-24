@@ -49,11 +49,11 @@ export async function addChantier(formData: FormData) {
     equipe_ids,
   }).select("id").single();
 
-  // Créer une affectation par jour × par membre d'équipe
+  // Créer une affectation par jour × par membre d'équipe (upsert pour éviter les doublons)
   if (chantier && date_debut && equipe_ids.length > 0) {
     const dates = plage(date_debut, date_fin, ouvrables);
     if (dates.length > 0) {
-      await supabase.from("affectations").insert(
+      await supabase.from("affectations").upsert(
         dates.flatMap((date) =>
           equipe_ids.map((pid) => ({
             profil_id: pid,
@@ -63,7 +63,8 @@ export async function addChantier(formData: FormData) {
             heure: heure_pose,
             lieu: lieu_pose,
           }))
-        )
+        ),
+        { onConflict: "profil_id,date,creneau" }
       );
     }
   }

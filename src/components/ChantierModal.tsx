@@ -26,7 +26,6 @@ export default function ChantierModal({
   const edit = !!chantier;
 
   const [selEquipe, setSelEquipe] = useState<Set<string>>(new Set(chantier?.equipe_ids ?? []));
-  const [planifier, setPlanifier] = useState(!edit); // en création : planification visible d'office
 
   function toggle(id: string) {
     setSelEquipe((prev) => {
@@ -100,9 +99,6 @@ export default function ChantierModal({
                 {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
               </select>
             </Field>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, paddingBottom: 2, whiteSpace: "nowrap" }}>
-              <input type="checkbox" name="renfort" defaultChecked={chantier?.renfort} /> Renfort
-            </label>
           </div>
 
           {/* Équipe */}
@@ -135,42 +131,31 @@ export default function ChantierModal({
 
           {/* Planification */}
           <div style={{ marginTop: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={secLbl}>📅 Planification {edit && <span style={{ fontWeight: 400, textTransform: "none", color: "#94a3b8" }}>(ajoute des jours)</span>}</div>
-              {edit && (
-                <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 5, cursor: "pointer", color: "#2563eb" }}>
-                  <input type="checkbox" checked={planifier} onChange={(e) => setPlanifier(e.target.checked)} />
-                  Planifier des jours
-                </label>
-              )}
+            <div style={secLbl}>
+              📅 Planification
+              {edit && <span style={{ fontWeight: 400, textTransform: "none", color: "#94a3b8" }}> · laissez vide pour ne pas modifier</span>}
             </div>
-
-            {planifier && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-                  <Field label="Du"><input type="date" name="date_debut" style={inp} /></Field>
-                  <div style={{ paddingBottom: 8, fontSize: 18, color: "#94a3b8" }}>→</div>
-                  <Field label="Au (inclus)"><input type="date" name="date_fin" style={inp} /></Field>
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, paddingBottom: 8, whiteSpace: "nowrap" }}>
-                    <input type="checkbox" name="ouvrables" value="true" defaultChecked /> Jours ouvrables
-                  </label>
-                </div>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", marginTop: 8 }}>
-                  <Field label="Heure départ"><input type="time" name="heure_pose" style={inp} /></Field>
-                  <Field label="Créneau">
-                    <select name="creneau_pose" defaultValue="journee" style={inp}>
-                      <option value="journee">Journée</option>
-                      <option value="matin">Matin</option>
-                      <option value="apres_midi">Après-midi</option>
-                    </select>
-                  </Field>
-                  <Field label="Lieu de pose" flex={2}><input name="lieu_pose" placeholder="Adresse…" style={inp} /></Field>
-                </div>
-                <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8" }}>
-                  ℹ️ Une affectation par jour et par membre sélectionné.
-                </div>
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+                <Field label="Du"><input type="date" name="date_debut" style={inp} /></Field>
+                <div style={{ paddingBottom: 8, fontSize: 18, color: "#94a3b8" }}>→</div>
+                <Field label="Au (inclus)"><input type="date" name="date_fin" style={inp} /></Field>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, paddingBottom: 8, whiteSpace: "nowrap" }}>
+                  <input type="checkbox" name="ouvrables" value="true" defaultChecked /> Jours ouvrables
+                </label>
               </div>
-            )}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", marginTop: 8 }}>
+                <Field label="Heure départ"><input type="time" name="heure_pose" style={inp} /></Field>
+                <Field label="Créneau">
+                  <select name="creneau_pose" defaultValue="journee" style={inp}>
+                    <option value="journee">Journée</option>
+                    <option value="matin">Matin</option>
+                    <option value="apres_midi">Après-midi</option>
+                  </select>
+                </Field>
+                <Field label="Lieu de pose" flex={2}><input name="lieu_pose" placeholder="Adresse…" style={inp} /></Field>
+              </div>
+            </div>
           </div>
 
           {/* Notes */}
