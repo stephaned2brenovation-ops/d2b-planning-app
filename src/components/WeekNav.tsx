@@ -55,7 +55,7 @@ export default function WeekNav({ refISO }: { refISO: string }) {
       <button onClick={() => go(1)} style={arrow}>›</button>
 
       {/* Label détaillé */}
-      <span style={{ fontSize: 13, color: "#6b7686" }}>{weekLabel(ref)}</span>
+      <span className="week-detail" style={{ fontSize: 13, color: "#6b7686" }}>{weekLabel(ref)}</span>
 
       <button onClick={() => router.push("/")}
               style={{ ...arrow, width: "auto", padding: "0 12px", fontSize: 13 }}>

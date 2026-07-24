@@ -79,7 +79,7 @@ export default async function PlanningPage({
       <RealtimeRefresh />
 
       {/* ── Barre de navigation ── */}
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+      <div className="planning-bar" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
         {/* Tabs */}
         <PlanningTabNav vue={vue} bureau={editable} />
 
@@ -114,7 +114,7 @@ export default async function PlanningPage({
             editable={editable}
           />
           {editable && (
-            <p style={{ color: "#64748b", fontSize: 12, marginTop: 10 }}>
+            <p className="mob-hide" style={{ color: "#64748b", fontSize: 12, marginTop: 10 }}>
               Astuce : cliquez sur &quot;+ Ajouter&quot; dans une cellule pour affecter des membres à ce chantier ce jour-là.
             </p>
           )}
@@ -140,7 +140,7 @@ export default async function PlanningPage({
             livraisons={livraisons.map((l) => ({ date: l.date, fournisseur: l.fournisseur, description: l.description }))}
           />
           {editable && (
-            <p style={{ color: "#64748b", fontSize: 12, marginTop: 10 }}>
+            <p className="mob-hide" style={{ color: "#64748b", fontSize: 12, marginTop: 10 }}>
               Astuce : glissez un chantier sur une case ou utilisez le ＋ dans chaque cellule.
             </p>
           )}

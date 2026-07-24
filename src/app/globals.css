@@ -16,3 +16,44 @@ html, body {
 }
 
 * { box-sizing: border-box; }
+
+/* ── Mobile responsive ── */
+@media (max-width: 640px) {
+  /* Header : icônes seulement dans la nav */
+  .nav-text  { display: none; }
+  .user-nom  { display: none; }
+
+  /* Logo un peu plus petit */
+  .logo-link img { width: 110px !important; height: 28px !important; }
+
+  /* Contenu principal : padding réduit */
+  .app-main { padding: 10px 10px !important; }
+
+  /* Barre planning : empilée */
+  .planning-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .planning-bar > * { flex-shrink: 0; }
+
+  /* Label de semaine détaillé : masqué */
+  .week-detail { display: none !important; }
+
+  /* Bouton Aujourd'hui : raccourci */
+  .week-today::before { content: "Auj."; }
+  .week-today span    { display: none; }
+
+  /* Grille chantiers : 1 colonne */
+  .chantier-grid { grid-template-columns: 1fr !important; }
+
+  /* Astuces masquées */
+  .mob-hide { display: none !important; }
+
+  /* Bouton édition card : plus grand pour le tactile */
+  .card-edit-btn {
+    padding: 8px 14px !important;
+    font-size: 15px !important;
+  }
+}

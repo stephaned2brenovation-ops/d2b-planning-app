@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 18px", display: "flex", alignItems: "center", gap: 12, height: 56 }}>
           {/* Logo */}
-          <a href="/" style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+          <a href="/" className="logo-link" style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
             <Image src="/logo-d2b-maison.jpg" alt="D2B Rénovation" height={40} width={162}
                    style={{ objectFit: "contain", objectPosition: "left", display: "block" }} priority />
           </a>
@@ -54,12 +54,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
           {/* Nav */}
           <nav style={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <NavLink href="/">📅 Planning</NavLink>
-            <NavLink href="/mobile">📱 Mon planning</NavLink>
-            {bureau && <NavLink href="/chantiers">🏗️ Chantiers</NavLink>}
-            {bureau && <NavLink href="/livraisons">🚚 Livraisons</NavLink>}
-            {bureau && <NavLink href="/personnel">👥 Personnel</NavLink>}
-            {bureau && <NavLink href="/notifications">🔔 Notifications</NavLink>}
+            <NavLink href="/">📅 <span className="nav-text">Planning</span></NavLink>
+            <NavLink href="/mobile">📱 <span className="nav-text">Mon planning</span></NavLink>
+            {bureau && <NavLink href="/chantiers">🏗️ <span className="nav-text">Chantiers</span></NavLink>}
+            {bureau && <NavLink href="/livraisons">🚚 <span className="nav-text">Livraisons</span></NavLink>}
+            {bureau && <NavLink href="/personnel">👥 <span className="nav-text">Personnel</span></NavLink>}
+            {bureau && <NavLink href="/notifications">🔔 <span className="nav-text">Notifs</span></NavLink>}
           </nav>
 
           <div style={{ flex: 1 }} />
@@ -74,7 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             }}>
               {initiales}
             </div>
-            <div style={{ lineHeight: 1.2 }}>
+            <div className="user-nom" style={{ lineHeight: 1.2 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{profil.nom}</div>
               <div style={{ fontSize: 11, color: "#94a3b8" }}>{ROLE_LABEL[profil.role]}</div>
             </div>
@@ -93,7 +93,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* ── Contenu ── */}
-      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 18px" }}>
+      <main className="app-main" style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 18px" }}>
         {children}
       </main>
     </div>

@@ -79,7 +79,7 @@ export default function PlanningChantiers(props: {
             </div>
           </div>
           {editable && (
-            <button onClick={() => setModal(c)} title="Modifier"
+            <button onClick={() => setModal(c)} title="Modifier" className="card-edit-btn"
                     style={{ border: "1px solid #e2e8f0", background: "#f8fafc", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 13, color: "#475569", flexShrink: 0 }}>
               ✏️
             </button>
@@ -185,7 +185,7 @@ export default function PlanningChantiers(props: {
           Aucun chantier. Cliquez sur <strong>+ Ajouter un chantier</strong> pour commencer.
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+        <div className="chantier-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
           {actifs.map((c) => renderCard(c, false))}
         </div>
       )}
@@ -196,7 +196,7 @@ export default function PlanningChantiers(props: {
           <div style={{ margin: "20px 0 10px", fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>
             📭 Non planifiés cette semaine ({inactifs.length})
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+          <div className="chantier-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
             {inactifs.map((c) => renderCard(c, true))}
           </div>
         </>
