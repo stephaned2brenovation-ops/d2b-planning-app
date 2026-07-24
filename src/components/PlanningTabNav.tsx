@@ -19,7 +19,7 @@ export default function PlanningTabNav({ vue, bureau }: { vue: string; bureau: b
   return (
     <div style={{ display: "flex", gap: 3, background: "#e2e8f0", borderRadius: 11, padding: 4, flexShrink: 0 }}>
       <Tab active={vue === "chantiers"} onClick={() => goTo("chantiers")}><IconBuilding size={14} /> Chantiers</Tab>
-      <Tab active={vue === "equipes"}   onClick={() => goTo("equipes")}><IconUsers size={14} /> Équipes</Tab>
+      <Tab active={vue === "equipes"}   onClick={() => goTo("equipes")}><IconUsers size={14} /> D2B</Tab>
     </div>
   );
 }
