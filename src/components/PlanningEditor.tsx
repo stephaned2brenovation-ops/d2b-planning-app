@@ -7,21 +7,27 @@ import {
 } from "@/app/(app)/planning-actions";
 import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
 
-type P = { id: string; nom: string; couleur: string | null };
-type C = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
-type A = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string; heure: string | null; lieu: string | null };
-type R = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
-type Pr = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
+type P   = { id: string; nom: string; couleur: string | null };
+type C   = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
+type A   = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string; heure: string | null; lieu: string | null };
+type R   = { id: string; profil_id: string; date: string; titre: string; heure: string | null };
+type Pr  = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
 type Liv = { date: string; fournisseur: string; description: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
-type RdvModal  = { kind: "rdv";     pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
-type PosModal  = { kind: "poseur";  pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
+type RdvModal = { kind: "rdv";    pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
+type PosModal = { kind: "poseur"; pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
 
-function fmtDate(iso: string, label: string) {
-  const d = new Date(iso + "T00:00:00");
-  return `${label} ${d.getDate()} ${d.toLocaleString("fr-FR", { month: "long" })} ${d.getFullYear()}`;
-}
+const TODAY = new Date().toISOString().slice(0, 10);
+
+/* ── Couleurs par section ── */
+const SEC = {
+  commerciaux:   { bg: "#eff6ff", border: "#2563eb", color: "#1e3a8a", icon: "👔" },
+  administration:{ bg: "#f5f3ff", border: "#7c3aed", color: "#4c1d95", icon: "📋" },
+  menuiseries:   { bg: "#fffbeb", border: "#d97706", color: "#78350f", icon: "🪟" },
+  maconnerie:    { bg: "#fef2f2", border: "#dc2626", color: "#7f1d1d", icon: "🧱" },
+  livraisons:    { bg: "#fff7ed", border: "#ea580c", color: "#7c2d12", icon: "🚚" },
+} as const;
 
 export default function PlanningEditor(props: {
   days: Day[];
@@ -35,12 +41,11 @@ export default function PlanningEditor(props: {
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
 
-  // ── Modaux ──
-  const [modal, setModal] = useState<RdvModal | PosModal | null>(null);
-  const [rdvTitre, setRdvTitre] = useState("");
-  const [rdvHeure, setRdvHeure] = useState("");
-  const [rdvLieu,  setRdvLieu]  = useState("");
-  const [rdvDate,  setRdvDate]  = useState("");   // date choisie dans le modal
+  const [modal, setModal]         = useState<RdvModal | PosModal | null>(null);
+  const [rdvTitre, setRdvTitre]   = useState("");
+  const [rdvHeure, setRdvHeure]   = useState("");
+  const [rdvLieu,  setRdvLieu]    = useState("");
+  const [rdvDate,  setRdvDate]    = useState("");
   const [posChantier, setPosChantier] = useState("");
   const [posDate,     setPosDate]     = useState("");
   const [posHeure,    setPosHeure]    = useState("");
@@ -84,80 +89,47 @@ export default function PlanningEditor(props: {
     setDrag(null);
   }
 
-  /* ── Lignes poseurs / maçons — même style que rdvRows ── */
+  /* ── Lignes poseurs / maçons ── */
   function poseurRows(list: P[]) {
-    if (!list.length) return <tr><td style={tdLbl}>—</td><td colSpan={7} style={{ ...td, color: "#c4cad4" }}>Aucun</td></tr>;
+    if (!list.length) return (
+      <tr><td style={tdLbl}>—</td>
+        <td colSpan={7} style={{ ...td, color: "#c4cad4", fontStyle: "italic", fontSize: 12 }}>Aucun</td>
+      </tr>
+    );
     return list.map((p) => (
       <tr key={p.id}>
-        <td style={{ ...tdLbl, borderLeft: `5px solid ${p.couleur ?? "#6b7686"}`, color: p.couleur ?? "#39424e" }}>{p.nom}</td>
-        {days.map((d) => (
-          <td key={d.iso}
-              onDragOver={editable ? (e) => e.preventDefault() : undefined}
-              onDrop={editable ? () => drop(p.id, d.iso) : undefined}
-              style={{ ...td, background: d.weekend ? "#fafafa" : "#fff" }}>
-            {affOf(p.id, d.iso).map((a) => (
-              <div key={a.id} style={{ marginBottom: 3, background: (p.couleur ?? "#6b7686") + "18", borderRadius: 6, padding: "3px 6px", fontSize: 11.5 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  {a.heure && <span style={{ color: "#2e77c9", fontWeight: 700, whiteSpace: "nowrap" }}>{a.heure.slice(0,5)}</span>}
-                  <span style={{ flex: 1, color: "#39424e", fontWeight: 600 }}>{a.client_nom}</span>
-                  {editable && <b onClick={() => window.confirm("Retirer cette affectation ?") && run(() => removeAffectation(a.id))} style={xBtn}>✕</b>}
-                </div>
-                {a.lieu && <div style={{ fontSize: 10.5, color: "#6b7686", marginTop: 1 }}>📍 {a.lieu}</div>}
-              </div>
-            ))}
-            {editable && (
-              <button onClick={() => openPosModal(p, d)} style={addBtn}>＋ Chantier</button>
-            )}
-          </td>
-        ))}
-      </tr>
-    ));
-  }
-
-  /* ── Lignes RDV (bureau / commerciaux) ── */
-  function rdvRows(list: P[]) {
-    if (!list.length) return <tr><td style={tdLbl}>—</td><td colSpan={7} style={{ ...td, color: "#c4cad4" }}>Aucun</td></tr>;
-    return list.map((p) => (
-      <tr key={p.id}>
-        <td style={{ ...tdLbl, borderLeft: `5px solid ${p.couleur ?? "#6b7686"}`, color: p.couleur ?? "#39424e" }}>{p.nom}</td>
-        {days.map((d) => (
-          <td key={d.iso} style={{ ...td, background: d.weekend ? "#fafafa" : "#fff" }}>
-            {rdvOf(p.id, d.iso).map((r) => (
-              <div key={r.id} style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 3, background: "#eef4ff", borderRadius: 6, padding: "3px 6px", fontSize: 11.5 }}>
-                {r.heure && <span style={{ color: "#2e77c9", fontWeight: 700, whiteSpace: "nowrap" }}>{r.heure.slice(0, 5)}</span>}
-                <span style={{ flex: 1 }}>{r.titre}</span>
-                {editable && <b onClick={() => window.confirm("Supprimer ce RDV ?") && run(() => removeRdv(r.id))} style={xBtn}>✕</b>}
-              </div>
-            ))}
-            {editable && (
-              <button onClick={() => openRdvModal(p, d)} style={addBtn}>＋ RDV</button>
-            )}
-          </td>
-        ))}
-      </tr>
-    ));
-  }
-
-  const presOf = (pid: string, iso: string) =>
-    presence.find((p) => p.profil_id === pid && p.date === iso)?.lieu ?? "";
-
-  function presenceRows(list: P[]) {
-    if (!list.length) return <tr><td style={tdLbl}>—</td><td colSpan={7} style={{ ...td, color: "#c4cad4" }}>Aucun</td></tr>;
-    return list.map((p) => (
-      <tr key={"pres-" + p.id}>
-        <td style={{ ...tdLbl, borderLeft: `5px solid ${p.couleur ?? "#6b7686"}`, color: p.couleur ?? "#39424e" }}>{p.nom}</td>
+        <td style={{ ...tdLbl, borderLeft: `4px solid ${p.couleur ?? "#6b7686"}` }}>
+          <span style={{ color: p.couleur ?? "#39424e", fontWeight: 700 }}>{p.nom}</span>
+        </td>
         {days.map((d) => {
-          const cur = presOf(p.id, d.iso);
-          const mag = cur === "magasin";
+          const isToday = d.iso === TODAY;
           return (
-            <td key={d.iso} style={{ ...td, background: mag ? (p.couleur ?? "#39424e") + "14" : d.weekend ? "#fafafa" : "#fff", color: mag ? (p.couleur ?? "#39424e") : undefined, fontWeight: mag ? 600 : undefined }}>
-              {editable ? (
-                <select value={cur} onChange={(e) => run(() => setPresence(p.id, d.iso, e.target.value as "magasin" | "rdv_ext" | ""))} style={sel}>
-                  <option value="">—</option>
-                  <option value="magasin">Magasin</option>
-                  <option value="rdv_ext">RDV ext.</option>
-                </select>
-              ) : (cur === "magasin" ? "Magasin" : cur === "rdv_ext" ? "RDV ext." : <span style={{ color: "#c4cad4" }}>—</span>)}
+            <td key={d.iso}
+                onDragOver={editable ? (e) => e.preventDefault() : undefined}
+                onDrop={editable ? () => drop(p.id, d.iso) : undefined}
+                style={{ ...td, background: isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff", borderTop: isToday ? "2px solid #fbbf24" : undefined }}>
+              {affOf(p.id, d.iso).map((a) => (
+                <div key={a.id} style={{ marginBottom: 4, background: (p.couleur ?? "#6b7686") + "1a", border: `1px solid ${p.couleur ?? "#6b7686"}30`, borderRadius: 7, padding: "4px 7px", fontSize: 11.5 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    {a.heure && (
+                      <span style={{ background: "#2563eb", color: "#fff", borderRadius: 4, padding: "0 5px", fontSize: 10.5, fontWeight: 700 }}>
+                        {a.heure.slice(0, 5)}
+                      </span>
+                    )}
+                    <span style={{ flex: 1, fontWeight: 600, color: "#1e293b" }}>{a.client_nom}</span>
+                    {editable && (
+                      <span onClick={() => window.confirm("Retirer cette affectation ?") && run(() => removeAffectation(a.id))}
+                            style={{ color: "#d0212f", cursor: "pointer", fontSize: 13, lineHeight: 1, opacity: 0.6 }}>✕</span>
+                    )}
+                  </div>
+                  {a.lieu && <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>📍 {a.lieu}</div>}
+                </div>
+              ))}
+              {editable && (
+                <button onClick={() => openPosModal(p, d)} style={addBtnChantier}>
+                  + Chantier
+                </button>
+              )}
             </td>
           );
         })}
@@ -165,30 +137,71 @@ export default function PlanningEditor(props: {
     ));
   }
 
+  /* ── Lignes RDV (commerciaux / administration) ── */
+  function rdvRows(list: P[]) {
+    if (!list.length) return (
+      <tr><td style={tdLbl}>—</td>
+        <td colSpan={7} style={{ ...td, color: "#c4cad4", fontStyle: "italic", fontSize: 12 }}>Aucun</td>
+      </tr>
+    );
+    return list.map((p) => (
+      <tr key={p.id}>
+        <td style={{ ...tdLbl, borderLeft: `4px solid ${p.couleur ?? "#6b7686"}` }}>
+          <span style={{ color: p.couleur ?? "#39424e", fontWeight: 700 }}>{p.nom}</span>
+        </td>
+        {days.map((d) => {
+          const isToday = d.iso === TODAY;
+          return (
+            <td key={d.iso} style={{ ...td, background: isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff", borderTop: isToday ? "2px solid #fbbf24" : undefined }}>
+              {rdvOf(p.id, d.iso).map((r) => (
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 7, padding: "4px 7px", fontSize: 11.5 }}>
+                  {r.heure && (
+                    <span style={{ background: "#2563eb", color: "#fff", borderRadius: 4, padding: "0 5px", fontSize: 10.5, fontWeight: 700 }}>
+                      {r.heure.slice(0, 5)}
+                    </span>
+                  )}
+                  <span style={{ flex: 1, color: "#1e3a8a", fontWeight: 600 }}>{r.titre}</span>
+                  {editable && (
+                    <span onClick={() => window.confirm("Supprimer ce RDV ?") && run(() => removeRdv(r.id))}
+                          style={{ color: "#d0212f", cursor: "pointer", fontSize: 13, lineHeight: 1, opacity: 0.6 }}>✕</span>
+                  )}
+                </div>
+              ))}
+              {editable && (
+                <button onClick={() => openRdvModal(p, d)} style={addBtnRdv}>+ RDV</button>
+              )}
+            </td>
+          );
+        })}
+      </tr>
+    ));
+  }
+
+  const presOf = (pid: string, iso: string) =>
+    presence.find((p) => p.profil_id === pid && p.date === iso)?.lieu ?? "";
+
   const headerColor = modal?.pcouleur ?? "#39424e";
 
   return (
-    <div>
+    <div style={{ opacity: pending ? 0.65 : 1, transition: "opacity .2s" }}>
 
-      {/* ═══════════════════════════════════════
-          MODAL RDV
-      ═══════════════════════════════════════ */}
+      {/* ══ MODAL RDV ══ */}
       {modal?.kind === "rdv" && (
         <div style={overlay} onClick={() => setModal(null)}>
           <div style={card} onClick={(e) => e.stopPropagation()}>
-            <div style={{ ...modalHdr, background: headerColor }}>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Nouveau RDV</div>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>{modal.pnom}</div>
+            <div style={{ ...modalHdr, background: `linear-gradient(135deg, ${headerColor}, ${headerColor}cc)` }}>
+              <div style={{ fontSize: 11, opacity: 0.8, textTransform: "uppercase", letterSpacing: 0.5 }}>Nouveau RDV</div>
+              <div style={{ fontWeight: 700, fontSize: 18, marginTop: 2 }}>{modal.pnom}</div>
             </div>
-            <form onSubmit={submitRdv} style={{ padding: "18px 20px 16px" }}>
+            <form onSubmit={submitRdv} style={{ padding: "20px 22px 18px" }}>
               <label style={lbl}>Date <span style={{ color: "#d0212f" }}>*</span></label>
-              <input type="date" required value={rdvDate} onChange={(e) => setRdvDate(e.target.value)} style={{ ...inp, marginBottom: 12 }} />
+              <input type="date" required value={rdvDate} onChange={(e) => setRdvDate(e.target.value)} style={{ ...inp, marginBottom: 14 }} />
 
               <label style={lbl}>Désignation <span style={{ color: "#d0212f" }}>*</span></label>
               <input autoFocus required value={rdvTitre} onChange={(e) => setRdvTitre(e.target.value)}
-                     placeholder="Visite client, Devis, Réunion…" style={{ ...inp, marginBottom: 12 }} />
+                     placeholder="Visite client, Devis, Réunion…" style={{ ...inp, marginBottom: 14 }} />
 
-              <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
                 <div style={{ flex: 1 }}>
                   <label style={lbl}>Heure</label>
                   <input type="time" value={rdvHeure} onChange={(e) => setRdvHeure(e.target.value)} style={inp} />
@@ -208,27 +221,24 @@ export default function PlanningEditor(props: {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════
-          MODAL POSEUR — affectation chantier
-      ═══════════════════════════════════════ */}
+      {/* ══ MODAL POSEUR ══ */}
       {modal?.kind === "poseur" && (
         <div style={overlay} onClick={() => setModal(null)}>
           <div style={card} onClick={(e) => e.stopPropagation()}>
-            <div style={{ ...modalHdr, background: headerColor }}>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Affecter un chantier</div>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>{modal.pnom}</div>
+            <div style={{ ...modalHdr, background: `linear-gradient(135deg, ${headerColor}, ${headerColor}cc)` }}>
+              <div style={{ fontSize: 11, opacity: 0.8, textTransform: "uppercase", letterSpacing: 0.5 }}>Affecter un chantier</div>
+              <div style={{ fontWeight: 700, fontSize: 18, marginTop: 2 }}>{modal.pnom}</div>
             </div>
-            <form onSubmit={submitPoseur} style={{ padding: "18px 20px 16px" }}>
-
+            <form onSubmit={submitPoseur} style={{ padding: "20px 22px 18px" }}>
               <label style={lbl}>Date <span style={{ color: "#d0212f" }}>*</span></label>
-              <input type="date" required value={posDate} onChange={(e) => setPosDate(e.target.value)} style={{ ...inp, marginBottom: 12 }} />
+              <input type="date" required value={posDate} onChange={(e) => setPosDate(e.target.value)} style={{ ...inp, marginBottom: 14 }} />
 
               <label style={lbl}>Chantier <span style={{ color: "#d0212f" }}>*</span></label>
               <select required value={posChantier} onChange={(e) => {
                 setPosChantier(e.target.value);
                 const c = chantiers.find((x) => x.id === e.target.value);
-                if (c?.ville && !posLieu) setPosLieu(c.adresse ?? c.ville ?? "");
-              }} style={{ ...inp, marginBottom: 12 }}>
+                if (c && !posLieu) setPosLieu(c.adresse ?? c.ville ?? "");
+              }} style={{ ...inp, marginBottom: 14 }}>
                 <option value="">— Sélectionner un chantier —</option>
                 {chantiers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -237,7 +247,7 @@ export default function PlanningEditor(props: {
                 ))}
               </select>
 
-              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
                 <div style={{ flex: 1 }}>
                   <label style={lbl}>Heure de départ</label>
                   <input type="time" value={posHeure} onChange={(e) => setPosHeure(e.target.value)} style={inp} />
@@ -253,7 +263,8 @@ export default function PlanningEditor(props: {
               </div>
 
               <label style={lbl}>Lieu / Adresse</label>
-              <input value={posLieu} onChange={(e) => setPosLieu(e.target.value)} placeholder="Adresse du chantier…" style={{ ...inp, marginBottom: 14 }} />
+              <input value={posLieu} onChange={(e) => setPosLieu(e.target.value)}
+                     placeholder="Adresse du chantier…" style={{ ...inp, marginBottom: 16 }} />
 
               <div style={modalFtr}>
                 <button type="button" onClick={() => setModal(null)} style={btnCancel}>Annuler</button>
@@ -264,71 +275,90 @@ export default function PlanningEditor(props: {
         </div>
       )}
 
-      {/* ── Barre chantiers drag ── */}
+      {/* ── Barre glisser-déposer ── */}
       {editable && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10, alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: "#6b7686" }}>Glissez un chantier sur une case :</span>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12, alignItems: "center", background: "#fff", border: "1px solid #e7e9ee", borderRadius: 10, padding: "8px 12px" }}>
+          <span style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginRight: 4 }}>Glisser :</span>
           {chantiers.map((c) => (
             <span key={c.id} draggable onDragStart={() => setDrag(c.id)} onDragEnd={() => setDrag(null)}
-                  style={{ ...chip, cursor: "grab", background: "#eef1f5" }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, background: drag === c.id ? "#dbeafe" : "#f1f5f9", border: `1px solid ${drag === c.id ? "#3b82f6" : "#e2e8f0"}`, borderRadius: 20, padding: "3px 10px 3px 8px", fontSize: 12, cursor: "grab", fontWeight: 500, color: "#334155" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUT_COLOR[c.statut], display: "inline-block" }} />
               {c.client_nom}
-              <span style={{ marginLeft: 6, color: "#fff", background: STATUT_COLOR[c.statut], borderRadius: 4, padding: "0 5px", fontSize: 10 }}>{STATUT_LABEL[c.statut]}</span>
             </span>
           ))}
-          {chantiers.length === 0 && <span style={{ fontSize: 12, color: "#c4cad4" }}>Aucun chantier — créez-en dans l'onglet Chantiers.</span>}
+          {chantiers.length === 0 && <span style={{ fontSize: 12, color: "#c4cad4" }}>Aucun chantier — créez-en dans l&apos;onglet Chantiers.</span>}
         </div>
       )}
 
       {/* ── Tableau ── */}
-      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e9ee", overflowX: "auto", opacity: pending ? 0.6 : 1 }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", minWidth: 820 }}>
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflowX: "auto", boxShadow: "0 1px 6px rgba(0,0,0,.06)" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", minWidth: 840 }}>
           <thead>
             <tr>
-              <th style={{ ...th, textAlign: "left", paddingLeft: 12, background: "#4c5766" }}>D2B RÉNOVATION</th>
-              {days.map((d) => (
-                <th key={d.iso} style={{ ...th, background: d.weekend ? "#345f86" : "#39424e" }}>
-                  {d.label}<div style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>{d.ddmm}</div>
-                </th>
-              ))}
+              <th style={{ ...th, textAlign: "left", paddingLeft: 14, background: "#1e293b", width: 130 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1, color: "#94a3b8", textTransform: "uppercase" }}>Personnel</span>
+              </th>
+              {days.map((d) => {
+                const isToday = d.iso === TODAY;
+                return (
+                  <th key={d.iso} style={{
+                    ...th,
+                    background: isToday ? "#1d4ed8" : d.weekend ? "#2d3f52" : "#334155",
+                    borderBottom: isToday ? "3px solid #fbbf24" : undefined,
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{d.label}</div>
+                    <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.75, marginTop: 1 }}>{d.ddmm}</div>
+                    {isToday && <div style={{ fontSize: 9, background: "#fbbf24", color: "#78350f", borderRadius: 4, padding: "1px 4px", display: "inline-block", marginTop: 2, fontWeight: 700 }}>AUJOURD&apos;HUI</div>}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
-            <tr><td colSpan={8} style={sec}>Commerciaux</td></tr>
+
+            {/* COMMERCIAUX */}
+            <SectionRow label="Commerciaux" s={SEC.commerciaux} />
             {rdvRows(props.commerciaux)}
 
+            {/* ADMINISTRATION */}
             {props.administration.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Administration</td></tr>
+              <SectionRow label="Administration" s={SEC.administration} />
               {rdvRows(props.administration)}
             </>}
 
-            <tr><td colSpan={8} style={sec}>Menuiseries Extérieures</td></tr>
+            {/* MENUISERIES */}
+            <SectionRow label="Menuiseries Extérieures" s={SEC.menuiseries} />
             {poseurRows(props.menuiseries)}
 
+            {/* MAÇONNERIE */}
             {props.maconnerie.length > 0 && <>
-              <tr><td colSpan={8} style={sec}>Maçonnerie Général</td></tr>
+              <SectionRow label="Maçonnerie Général" s={SEC.maconnerie} />
               {poseurRows(props.maconnerie)}
             </>}
 
-            <tr><td colSpan={8} style={{ ...sec, background: "#fff3e0", color: "#b45309" }}>🚚 Livraisons fournisseurs</td></tr>
+            {/* LIVRAISONS */}
+            <SectionRow label="Livraisons fournisseurs" s={SEC.livraisons} />
             <tr>
-              <td style={{ ...tdLbl, color: "#b45309", fontWeight: 700 }}>Livraisons</td>
+              <td style={{ ...tdLbl, color: SEC.livraisons.color, fontWeight: 700, fontSize: 11 }}>Livraisons</td>
               {days.map((d) => {
                 const livs = livraisons.filter((l) => l.date === d.iso);
+                const isToday = d.iso === TODAY;
                 return (
-                  <td key={d.iso} style={{ ...td, background: livs.length ? "#fff8ed" : d.weekend ? "#fafafa" : "#fff" }}>
+                  <td key={d.iso} style={{ ...td, background: livs.length ? "#fff7ed" : isToday ? "#fffde7" : d.weekend ? "#f8f9fb" : "#fff" }}>
                     {livs.map((l, i) => (
                       <div key={i} style={{ marginBottom: 3 }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fed7aa", borderRadius: 6, padding: "2px 7px", fontSize: 11, fontWeight: 600, color: "#92400e" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#fed7aa", border: "1px solid #fb923c", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, color: "#7c2d12" }}>
                           🚚 {l.fournisseur}
                         </span>
                         {l.description && <div style={{ fontSize: 10.5, color: "#92400e", marginTop: 2, marginLeft: 2 }}>{l.description}</div>}
                       </div>
                     ))}
-                    {!livs.length && <span style={{ color: "#d4c5a9", fontSize: 11 }}>—</span>}
+                    {!livs.length && <span style={{ color: "#e2e8f0", fontSize: 12 }}>—</span>}
                   </td>
                 );
               })}
             </tr>
+
           </tbody>
         </table>
       </div>
@@ -336,20 +366,69 @@ export default function PlanningEditor(props: {
   );
 }
 
+function SectionRow({ label, s }: { label: string; s: typeof SEC[keyof typeof SEC] }) {
+  return (
+    <tr>
+      <td colSpan={8} style={{
+        background: s.bg,
+        borderLeft: `4px solid ${s.border}`,
+        padding: "7px 14px",
+        fontWeight: 700, fontSize: 11.5, letterSpacing: 0.5,
+        color: s.color,
+        textTransform: "uppercase",
+        borderTop: "2px solid #f1f5f9",
+      }}>
+        {s.icon} {label}
+      </td>
+    </tr>
+  );
+}
+
 /* ── Styles ── */
-const th: React.CSSProperties  = { color: "#fff", fontWeight: 600, fontSize: 12.5, padding: "9px 8px", textAlign: "center", border: "1px solid #2b333d" };
-const sec: React.CSSProperties = { background: "#f4f5f7", fontWeight: 700, fontSize: 11, letterSpacing: 0.6, color: "#6b7686", padding: "6px 14px", textTransform: "uppercase", border: "1px solid #e3e6ec" };
-const td: React.CSSProperties  = { border: "1px solid #e3e6ec", padding: "6px 8px", fontSize: 12, verticalAlign: "top" };
-const tdLbl: React.CSSProperties = { ...td, fontWeight: 600, fontSize: 12.5, background: "#fbfcfd", width: 120 };
-const chip: React.CSSProperties  = { display: "inline-flex", alignItems: "center", gap: 4, background: "#e8f0f8", borderRadius: 6, padding: "2px 7px", fontSize: 11.5, marginRight: 4, marginBottom: 3 };
-const xBtn: React.CSSProperties  = { cursor: "pointer", color: "#d0212f", marginLeft: 2 };
-const sel: React.CSSProperties   = { fontSize: 11, border: "1px dashed #cbd2db", borderRadius: 6, padding: "2px 4px", color: "#6b7686", background: "#fff" };
-const addBtn: React.CSSProperties = { fontSize: 11, border: "1px dashed #cbd2db", borderRadius: 6, padding: "2px 6px", color: "#6b7686", background: "#fff", cursor: "pointer" };
-const inp: React.CSSProperties   = { width: "100%", padding: "9px 11px", border: "1px solid #e7e9ee", borderRadius: 9, fontSize: 13, boxSizing: "border-box" };
-const lbl: React.CSSProperties   = { display: "block", fontSize: 12, fontWeight: 600, color: "#39424e", marginBottom: 4 };
-const overlay: React.CSSProperties = { position: "fixed", inset: 0, background: "rgba(20,30,50,.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" };
-const card: React.CSSProperties    = { background: "#fff", borderRadius: 16, width: 420, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" };
-const modalHdr: React.CSSProperties = { padding: "16px 20px", color: "#fff" };
+const th: React.CSSProperties = {
+  color: "#fff", fontWeight: 600, fontSize: 12.5, padding: "10px 8px",
+  textAlign: "center", border: "1px solid rgba(255,255,255,.08)",
+};
+const td: React.CSSProperties = {
+  border: "1px solid #f1f5f9", padding: "6px 7px", fontSize: 12, verticalAlign: "top", minHeight: 38,
+};
+const tdLbl: React.CSSProperties = {
+  ...td, fontSize: 12, background: "#fafbfc", width: 126, padding: "8px 10px",
+};
+const inp: React.CSSProperties = {
+  width: "100%", padding: "9px 11px", border: "1px solid #e2e8f0",
+  borderRadius: 9, fontSize: 13, boxSizing: "border-box", outline: "none",
+};
+const lbl: React.CSSProperties = {
+  display: "block", fontSize: 11.5, fontWeight: 700, color: "#475569",
+  marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3,
+};
+const overlay: React.CSSProperties = {
+  position: "fixed", inset: 0, background: "rgba(15,23,42,.5)",
+  zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center",
+  backdropFilter: "blur(2px)",
+};
+const card: React.CSSProperties = {
+  background: "#fff", borderRadius: 18, width: 440, maxWidth: "95vw",
+  boxShadow: "0 25px 60px rgba(0,0,0,.3)", overflow: "hidden",
+};
+const modalHdr: React.CSSProperties = { padding: "18px 22px", color: "#fff" };
 const modalFtr: React.CSSProperties = { display: "flex", gap: 8, justifyContent: "flex-end" };
-const btnCancel: React.CSSProperties = { padding: "9px 16px", border: "1px solid #e7e9ee", borderRadius: 10, background: "#fff", cursor: "pointer", fontSize: 13, color: "#6b7686" };
-const btnOk: React.CSSProperties    = { padding: "9px 20px", border: 0, borderRadius: 10, color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700 };
+const btnCancel: React.CSSProperties = {
+  padding: "9px 18px", border: "1px solid #e2e8f0", borderRadius: 10,
+  background: "#fff", cursor: "pointer", fontSize: 13, color: "#64748b",
+};
+const btnOk: React.CSSProperties = {
+  padding: "9px 22px", border: 0, borderRadius: 10,
+  color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700,
+};
+const addBtnRdv: React.CSSProperties = {
+  fontSize: 11, borderRadius: 6, padding: "2px 8px", cursor: "pointer",
+  border: "1px dashed #93c5fd", color: "#2563eb", background: "#eff6ff",
+  marginTop: 2, display: "block", width: "100%", textAlign: "left",
+};
+const addBtnChantier: React.CSSProperties = {
+  fontSize: 11, borderRadius: 6, padding: "2px 8px", cursor: "pointer",
+  border: "1px dashed #a3e635", color: "#365314", background: "#f7fee7",
+  marginTop: 2, display: "block", width: "100%", textAlign: "left",
+};
