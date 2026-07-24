@@ -100,6 +100,56 @@ export function IconCopy({ size = 14, strokeWidth }: IP) {
   );
 }
 
+/** Mobile */
+export function IconPhone({ size = 14, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+      <path d="M12 18h.01" />
+    </svg>
+  );
+}
+
+/** Notifications */
+export function IconBell({ size = 14, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+}
+
+/** Supprimer */
+export function IconTrash({ size = 14, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
+/** Modifier */
+export function IconPencil({ size = 14, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+    </svg>
+  );
+}
+
+/** Heure */
+export function IconClock({ size = 12, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
 /** Calendrier */
 export function IconCalendar({ size = 14, strokeWidth }: IP) {
   return (

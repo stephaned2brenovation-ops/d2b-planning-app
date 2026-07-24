@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ChantierModal from "@/components/ChantierModal";
 import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
+import { IconPin, IconCalendar, IconPencil, IconClock } from "@/components/icons";
 
 type P   = { id: string; nom: string; couleur: string | null; metier: string | null };
 type C   = {
@@ -13,7 +14,8 @@ type C   = {
 type A   = { id: string; profil_id: string; date: string; chantier_id: string; heure: string | null; creneau: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const _now = new Date();
+const TODAY = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
 const JOUR3 = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
 const JOURS_LONG = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -72,12 +74,17 @@ export default function PlanningChantiers(props: {
     const pm = idx.get(c.id);
     const membres = pm ? [...pm.keys()] : [];
     return (
-      <div key={c.id} style={{
+      <div key={c.id}
+           onClick={editable ? () => setModal(c) : undefined}
+           className={editable ? "chantier-card" : undefined}
+           style={{
         background: "#fff", border: "1px solid #e2e8f0",
         borderLeft: `5px solid ${STATUT_COLOR[c.statut]}`,
         borderRadius: 12, padding: "14px 16px",
         boxShadow: "0 1px 4px rgba(0,0,0,.05)",
         opacity: muted ? 0.7 : 1,
+        cursor: editable ? "pointer" : "default",
+        transition: "box-shadow .15s",
       }}>
         {/* En-tête */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
@@ -89,16 +96,16 @@ export default function PlanningChantiers(props: {
               </span>
               {c.renfort && <span style={{ fontSize: 10.5, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 5, fontWeight: 700 }}>RENFORT</span>}
             </div>
-            <div style={{ fontSize: 12.5, color: "#64748b", marginTop: 3 }}>
+            <div style={{ fontSize: 12.5, color: "#64748b", marginTop: 3, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
               {c.designation && <span>{c.designation}</span>}
-              {c.designation && c.ville && <span> · </span>}
-              {c.ville && <span>📍 {c.ville}</span>}
+              {c.designation && c.ville && <span>·</span>}
+              {c.ville && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><IconPin size={11} /> {c.ville}</span>}
             </div>
           </div>
           {editable && (
-            <button onClick={() => setModal(c)} title="Modifier" className="card-edit-btn"
-                    style={{ border: "1px solid #e2e8f0", background: "#f8fafc", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 13, color: "#475569", flexShrink: 0 }}>
-              ✏️
+            <button onClick={(e) => { e.stopPropagation(); setModal(c); }} title="Modifier" className="card-edit-btn"
+                    style={{ border: "1px solid #e2e8f0", background: "#f8fafc", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 13, color: "#475569", flexShrink: 0, display: "inline-flex", alignItems: "center" }}>
+              <IconPencil size={13} />
             </button>
           )}
         </div>
@@ -108,8 +115,8 @@ export default function PlanningChantiers(props: {
           const prochaine = prochaineDateByChantier.get(c.id);
           return prochaine ? (
             <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "3px 10px", fontWeight: 700 }}>
-                📅 Planifié le {formatDate(prochaine)}
+              <span style={{ fontSize: 12, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "3px 10px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <IconCalendar size={12} /> Planifié le {formatDate(prochaine)}
               </span>
             </div>
           ) : null;
@@ -180,8 +187,9 @@ export default function PlanningChantiers(props: {
                             fontSize: 10.5, padding: "2px 8px", borderRadius: 5, fontWeight: 700,
                             background: "#eff6ff", color: "#1d4ed8",
                             border: "1px solid #bfdbfe",
+                            display: "inline-flex", alignItems: "center", gap: 4,
                           }}>
-                            🕐 {heure}
+                            <IconClock size={11} /> {heure}
                           </span>
                         )}
                       </div>
@@ -223,7 +231,7 @@ export default function PlanningChantiers(props: {
       {inactifs.length > 0 && (
         <>
           <div style={{ margin: "20px 0 10px", fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>
-            📭 Non planifiés cette semaine ({inactifs.length})
+            Non planifiés cette semaine ({inactifs.length})
           </div>
           <div className="chantier-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
             {inactifs.map((c) => renderCard(c, true))}

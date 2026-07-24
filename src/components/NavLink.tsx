@@ -15,6 +15,9 @@ export default function NavLink({ href, children }: { href: string; children: Re
       fontWeight: active ? 700 : 500,
       background: active ? "rgba(255,255,255,0.15)" : "transparent",
       transition: "background .15s, color .15s",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
     }}>
       {children}
     </Link>

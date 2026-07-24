@@ -31,6 +31,12 @@ td:hover .cell-add,
   color: #1e293b !important;
 }
 
+/* ── Cards chantier cliquables ── */
+.chantier-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,.1) !important;
+  border-color: #cbd5e1 !important;
+}
+
 /* ── Mobile responsive ── */
 @media (max-width: 640px) {
   /* Header : icônes seulement dans la nav */

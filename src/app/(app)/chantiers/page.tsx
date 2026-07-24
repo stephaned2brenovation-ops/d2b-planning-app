@@ -111,6 +111,5 @@ export default async function ChantiersPage() {
 const grid: React.CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" };
 const inp: React.CSSProperties = { padding: "8px 10px", border: "1px solid #e7e9ee", borderRadius: 8, fontSize: 13 };
 const checkLbl: React.CSSProperties = { display: "flex", alignItems: "center", gap: 4, fontSize: 13, padding: "5px 10px", border: "1px solid #e7e9ee", borderRadius: 8, cursor: "pointer", background: "#fafbfc" };
-const btnAdd: React.CSSProperties = { border: 0, background: "#1f9d55", color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" };
 const btnSave: React.CSSProperties = { border: 0, background: "#39424e", color: "#fff", borderRadius: 8, padding: "8px 12px", fontSize: 12.5, cursor: "pointer" };
 const btnDel: React.CSSProperties = { border: 0, background: "#fdecee", color: "#d0212f", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer" };

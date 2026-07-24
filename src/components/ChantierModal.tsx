@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addChantier, updateChantier, deleteChantier } from "@/app/(app)/chantiers/actions";
 import { STATUT_LABEL, type StatutChantier } from "@/lib/types";
+import { IconBuilding, IconHardHat, IconCalendar, IconTrash } from "@/components/icons";
 
 type Profil = { id: string; nom: string; couleur: string | null; metier: string | null };
 type ChantierEdit = {
@@ -68,8 +69,8 @@ export default function ChantierModal({
             <div style={{ fontSize: 11, opacity: 0.7, textTransform: "uppercase", letterSpacing: 0.5 }}>
               {edit ? "Modifier le chantier" : "Nouveau chantier"}
             </div>
-            <div style={{ fontWeight: 700, fontSize: 17, marginTop: 2 }}>
-              {edit ? chantier!.client_nom : "🏗️ Créer un chantier"}
+            <div style={{ fontWeight: 700, fontSize: 17, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
+              {edit ? chantier!.client_nom : <><IconBuilding size={16} /> Créer un chantier</>}
             </div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: 0, color: "#94a3b8", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>✕</button>
@@ -103,7 +104,7 @@ export default function ChantierModal({
 
           {/* Équipe */}
           <div style={{ marginTop: 16 }}>
-            <div style={secLbl}>👷 Équipe affectée</div>
+            <div style={{ ...secLbl, display: "flex", alignItems: "center", gap: 6 }}><IconHardHat size={13} /> Équipe affectée</div>
             {equipe.length === 0 ? (
               <p style={{ color: "#94a3b8", fontSize: 13, margin: 0 }}>Aucun membre terrain.</p>
             ) : (
@@ -131,8 +132,8 @@ export default function ChantierModal({
 
           {/* Planification */}
           <div style={{ marginTop: 16 }}>
-            <div style={secLbl}>
-              📅 Planification
+            <div style={{ ...secLbl, display: "flex", alignItems: "center", gap: 6 }}>
+              <IconCalendar size={13} /> Planification
               {edit && <span style={{ fontWeight: 400, textTransform: "none", color: "#94a3b8" }}> · laissez vide pour ne pas modifier</span>}
             </div>
             <div style={{ marginTop: 8 }}>
@@ -166,8 +167,8 @@ export default function ChantierModal({
           {/* Actions */}
           <div style={{ display: "flex", alignItems: "center", marginTop: 18, gap: 8 }}>
             {edit && (
-              <button type="button" onClick={handleDelete} style={{ padding: "9px 14px", border: "1px solid #fecaca", borderRadius: 10, background: "#fef2f2", color: "#dc2626", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-                🗑 Supprimer
+              <button type="button" onClick={handleDelete} style={{ padding: "9px 14px", border: "1px solid #fecaca", borderRadius: 10, background: "#fef2f2", color: "#dc2626", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <IconTrash size={13} /> Supprimer
               </button>
             )}
             <div style={{ flex: 1 }} />

@@ -19,7 +19,8 @@ type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 type RdvModal = { kind: "rdv";    pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
 type PosModal = { kind: "poseur"; pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const _now = new Date();
+const TODAY = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
 
 /* ── Couleurs par section ── */
 const SEC = {

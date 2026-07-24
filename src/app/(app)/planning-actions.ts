@@ -66,7 +66,8 @@ export async function copyPreviousWeek(formData: FormData) {
   const shift = (iso: string, days: number) => {
     const d = new Date(iso + "T00:00:00");
     d.setDate(d.getDate() + days);
-    return d.toISOString().slice(0, 10);
+    // Composantes locales — évite le décalage UTC (fuseau France)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
   const prevLundi = shift(monday, -7);
   const prevDim = shift(monday, -1);

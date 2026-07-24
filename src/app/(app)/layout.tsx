@@ -3,6 +3,7 @@ import { getMyProfil } from "@/lib/queries";
 import { estBureau, ROLE_LABEL } from "@/lib/types";
 import { signOut } from "./actions";
 import NavLink from "@/components/NavLink";
+import { IconCalendar, IconPhone, IconBuilding, IconTruck, IconUsers, IconBell } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -54,12 +55,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
           {/* Nav */}
           <nav style={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <NavLink href="/">📅 <span className="nav-text">Planning</span></NavLink>
-            <NavLink href="/mobile">📱 <span className="nav-text">Mon planning</span></NavLink>
-            {bureau && <NavLink href="/chantiers">🏗️ <span className="nav-text">Chantiers</span></NavLink>}
-            {bureau && <NavLink href="/livraisons">🚚 <span className="nav-text">Livraisons</span></NavLink>}
-            {bureau && <NavLink href="/personnel">👥 <span className="nav-text">Personnel</span></NavLink>}
-            {bureau && <NavLink href="/notifications">🔔 <span className="nav-text">Notifs</span></NavLink>}
+            <NavLink href="/"><IconCalendar size={14} /> <span className="nav-text">Planning</span></NavLink>
+            <NavLink href="/mobile"><IconPhone size={14} /> <span className="nav-text">Mon planning</span></NavLink>
+            {bureau && <NavLink href="/chantiers"><IconBuilding size={14} /> <span className="nav-text">Chantiers</span></NavLink>}
+            {bureau && <NavLink href="/livraisons"><IconTruck size={14} /> <span className="nav-text">Livraisons</span></NavLink>}
+            {bureau && <NavLink href="/personnel"><IconUsers size={14} /> <span className="nav-text">Personnel</span></NavLink>}
+            {bureau && <NavLink href="/notifications"><IconBell size={14} /> <span className="nav-text">Notifs</span></NavLink>}
           </nav>
 
           <div style={{ flex: 1 }} />
