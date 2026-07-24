@@ -16,7 +16,7 @@ export default async function PlanningPage({
 }: {
   searchParams: { week?: string; vue?: string };
 }) {
-  const vue = searchParams.vue ?? "chantiers"; // "chantiers" | "equipes"
+  const vueParam = searchParams.vue ?? "chantiers"; // "chantiers" | "equipes"
   const ref = searchParams.week ? new Date(searchParams.week + "T00:00:00") : new Date();
   const days = weekDays(ref);
   const lundiISO = toISO(days[0]);
@@ -29,6 +29,8 @@ export default async function PlanningPage({
   ]);
 
   const editable = estBureau(moi?.role);
+  // Les ouvriers du bâtiment (non-bureau) voient uniquement les chantiers
+  const vue = editable ? vueParam : "chantiers";
 
   const slim     = (list: typeof profils) => list.map((x) => ({ id: x.id, nom: x.nom, couleur: x.couleur }));
   const slimFull = (list: typeof profils) => list.map((x) => ({ id: x.id, nom: x.nom, couleur: x.couleur, metier: x.metier }));
@@ -79,7 +81,7 @@ export default async function PlanningPage({
       {/* ── Barre de navigation ── */}
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
         {/* Tabs */}
-        <PlanningTabNav vue={vue} />
+        <PlanningTabNav vue={vue} bureau={editable} />
 
         {/* WeekNav */}
         <WeekNav refISO={toISO(mondayOf(ref))} />

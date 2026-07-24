@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function PlanningTabNav({ vue }: { vue: string }) {
+export default function PlanningTabNav({ vue, bureau }: { vue: string; bureau: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -11,6 +11,9 @@ export default function PlanningTabNav({ vue }: { vue: string }) {
     p.set("vue", v);
     router.push(`/?${p.toString()}`);
   }
+
+  // Les ouvriers du bâtiment n'ont accès qu'à la vue Chantiers
+  if (!bureau) return null;
 
   return (
     <div style={{ display: "flex", gap: 3, background: "#e2e8f0", borderRadius: 11, padding: 4, flexShrink: 0 }}>
