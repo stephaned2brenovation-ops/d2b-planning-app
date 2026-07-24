@@ -4,20 +4,37 @@ import { useRouter } from "next/navigation";
 import { useTransition, useState } from "react";
 import {
   assignAffectation, removeAffectation, addRdv, updateRdv, removeRdv,
+  addRelance, updateRelance, toggleRelanceFait, removeRelance,
 } from "@/app/(app)/planning-actions";
-import { STATUT_COLOR, type StatutChantier } from "@/lib/types";
-import { IconBriefcase, IconClipboard, IconHardHat, IconTruck, IconPin } from "@/components/icons";
+import { STATUT_COLOR, type StatutChantier, type CanalRelance } from "@/lib/types";
+import {
+  IconBriefcase, IconClipboard, IconHardHat, IconTruck, IconPin,
+  IconMail, IconPhoneCall, IconMessage, IconCheck, IconSend,
+} from "@/components/icons";
 
 type P   = { id: string; nom: string; couleur: string | null };
 type C   = { id: string; client_nom: string; ville: string | null; adresse: string | null; designation: string | null; statut: StatutChantier };
 type A   = { id: string; profil_id: string; date: string; chantier_id: string; client_nom: string; heure: string | null; lieu: string | null };
 type R   = { id: string; profil_id: string; date: string; titre: string; heure: string | null; lieu?: string | null };
+type Rel = {
+  id: string; profil_id: string; date: string; client_nom: string;
+  client_email: string | null; client_tel: string | null;
+  canal: CanalRelance; heure: string | null;
+  objet: string | null; message: string | null; statut: "a_faire" | "fait";
+};
 type Pr  = { profil_id: string; date: string; lieu: "magasin" | "rdv_ext" };
 type Liv = { date: string; fournisseur: string; description: string | null };
 type Day = { iso: string; label: string; ddmm: string; weekend: boolean };
 
-type RdvModal = { kind: "rdv";    pid: string; pnom: string; pcouleur: string | null; iso: string; label: string; rdvId?: string };
-type PosModal = { kind: "poseur"; pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
+type RdvModal = { kind: "rdv";     pid: string; pnom: string; pcouleur: string | null; iso: string; label: string; rdvId?: string };
+type PosModal = { kind: "poseur";  pid: string; pnom: string; pcouleur: string | null; iso: string; label: string };
+type RelModal = { kind: "relance"; pid: string; pnom: string; pcouleur: string | null; iso: string; label: string; relId?: string };
+
+const CANAL_ICON: Record<CanalRelance, React.ReactNode> = {
+  email:     <IconMail size={11} />,
+  telephone: <IconPhoneCall size={11} />,
+  sms:       <IconMessage size={11} />,
+};
 
 const _now = new Date();
 const TODAY = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
@@ -36,14 +53,16 @@ export default function PlanningEditor(props: {
   ouvriers: { metier: string; personnes: P[] }[];
   chantiers: C[]; affectations: A[]; rdv: R[]; presence: Pr[];
   livraisons: Liv[];
+  relances?: Rel[];
   editable: boolean;
 }) {
   const { days, chantiers, affectations, rdv, livraisons, editable } = props;
+  const relances = props.relances ?? [];
   const router = useRouter();
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
 
-  const [modal, setModal]         = useState<RdvModal | PosModal | null>(null);
+  const [modal, setModal]         = useState<RdvModal | PosModal | RelModal | null>(null);
   const [rdvTitre, setRdvTitre]   = useState("");
   const [rdvHeure, setRdvHeure]   = useState("");
   const [rdvLieu,  setRdvLieu]    = useState("");
@@ -54,10 +73,38 @@ export default function PlanningEditor(props: {
   const [posLieu,     setPosLieu]     = useState("");
   const [posCreneau,  setPosCreneau]  = useState<"journee"|"matin"|"apres_midi">("journee");
 
+  const [relClient, setRelClient] = useState("");
+  const [relEmail,  setRelEmail]  = useState("");
+  const [relTel,    setRelTel]    = useState("");
+  const [relCanal,  setRelCanal]  = useState<CanalRelance>("email");
+  const [relDate,   setRelDate]   = useState("");
+  const [relHeure,  setRelHeure]  = useState("");
+  const [relObjet,  setRelObjet]  = useState("");
+  const [relMsg,    setRelMsg]    = useState("");
+
   const run = (fn: () => Promise<unknown>) => start(async () => { await fn(); router.refresh(); });
 
   const affOf = (pid: string, iso: string) => affectations.filter((a) => a.profil_id === pid && a.date === iso);
   const rdvOf = (pid: string, iso: string) => rdv.filter((r) => r.profil_id === pid && r.date === iso);
+  const relOf = (pid: string, iso: string) => relances.filter((r) => r.profil_id === pid && r.date === iso);
+
+  const MSG_DEFAUT = (client: string) =>
+    `Bonjour ${client},\n\nNous revenons vers vous concernant votre projet de rénovation.\nAvez-vous eu le temps d'étudier notre proposition ?\n\nNous restons à votre disposition pour toute question.\n\nCordialement,\nD2B Rénovation`;
+
+  /** Lien d'action selon le canal (mailto: / tel: / sms:) */
+  function relanceHref(r: Rel): string | null {
+    if (r.canal === "email" && r.client_email) {
+      const su = encodeURIComponent(r.objet || "D2B Rénovation — Votre projet");
+      const bo = encodeURIComponent(r.message || MSG_DEFAUT(r.client_nom));
+      return `mailto:${r.client_email}?subject=${su}&body=${bo}`;
+    }
+    if (r.canal === "telephone" && r.client_tel) return `tel:${r.client_tel.replace(/\s/g, "")}`;
+    if (r.canal === "sms" && r.client_tel) {
+      const bo = encodeURIComponent(r.message || MSG_DEFAUT(r.client_nom));
+      return `sms:${r.client_tel.replace(/\s/g, "")}?body=${bo}`;
+    }
+    return null;
+  }
 
   function openRdvModal(p: P, d: Day) {
     setRdvTitre(""); setRdvHeure(""); setRdvLieu(""); setRdvDate(d.iso);
@@ -66,6 +113,34 @@ export default function PlanningEditor(props: {
   function openRdvEdit(p: P, r: R) {
     setRdvTitre(r.titre); setRdvHeure(r.heure?.slice(0, 5) ?? ""); setRdvLieu(r.lieu ?? ""); setRdvDate(r.date);
     setModal({ kind: "rdv", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: r.date, label: "", rdvId: r.id });
+  }
+  function openRelModal(p: P, d: Day) {
+    setRelClient(""); setRelEmail(""); setRelTel(""); setRelCanal("email");
+    setRelDate(d.iso); setRelHeure(""); setRelObjet(""); setRelMsg("");
+    setModal({ kind: "relance", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: d.iso, label: d.label });
+  }
+  function openRelEdit(p: P, r: Rel) {
+    setRelClient(r.client_nom); setRelEmail(r.client_email ?? ""); setRelTel(r.client_tel ?? "");
+    setRelCanal(r.canal); setRelDate(r.date); setRelHeure(r.heure?.slice(0, 5) ?? "");
+    setRelObjet(r.objet ?? ""); setRelMsg(r.message ?? "");
+    setModal({ kind: "relance", pid: p.id, pnom: p.nom, pcouleur: p.couleur, iso: r.date, label: "", relId: r.id });
+  }
+  function submitRelance(e: React.FormEvent) {
+    e.preventDefault();
+    if (!modal || modal.kind !== "relance" || !relClient.trim()) return;
+    const input = {
+      client_nom: relClient.trim(),
+      client_email: relEmail.trim() || null,
+      client_tel: relTel.trim() || null,
+      canal: relCanal,
+      date: relDate || modal.iso,
+      heure: relHeure || null,
+      objet: relObjet.trim() || null,
+      message: relMsg.trim() || null,
+    };
+    if (modal.relId) run(() => updateRelance(modal.relId!, input));
+    else             run(() => addRelance(modal.pid, input));
+    setModal(null);
   }
   function openPosModal(p: P, d: Day) {
     setPosChantier(""); setPosDate(d.iso); setPosHeure(""); setPosLieu(""); setPosCreneau("journee");
@@ -183,8 +258,51 @@ export default function PlanningEditor(props: {
                   )}
                 </div>
               ))}
+              {/* Relances clients */}
+              {relOf(p.id, d.iso).map((r) => {
+                const fait = r.statut === "fait";
+                const href = relanceHref(r);
+                return (
+                  <div key={r.id}
+                       onClick={editable ? () => openRelEdit(p, r) : undefined}
+                       title={editable ? "Cliquer pour modifier" : undefined}
+                       style={{
+                         display: "flex", alignItems: "center", gap: 5, marginBottom: 3,
+                         background: fait ? "#f0fdf4" : "#fff",
+                         border: `1px solid ${fait ? "#bbf7d0" : "#e8ebf0"}`,
+                         borderLeft: `3px solid ${fait ? "#22c55e" : "#f59e0b"}`,
+                         borderRadius: 6, padding: "3px 7px", fontSize: 11.5,
+                         boxShadow: "0 1px 2px rgba(0,0,0,.03)",
+                         cursor: editable ? "pointer" : "default",
+                         opacity: fait ? 0.75 : 1,
+                       }}>
+                    <span style={{ color: fait ? "#16a34a" : "#d97706", display: "inline-flex" }}>{CANAL_ICON[r.canal]}</span>
+                    {r.heure && <span style={{ color: "#b45309", fontWeight: 700, fontSize: 10.5 }}>{r.heure.slice(0, 5)}</span>}
+                    <span style={{ flex: 1, color: "#1e293b", fontWeight: 600, textDecoration: fait ? "line-through" : "none" }}>
+                      {r.client_nom}
+                    </span>
+                    {href && !fait && (
+                      <a href={href} onClick={(e) => e.stopPropagation()}
+                         title={r.canal === "email" ? "Envoyer l'email" : r.canal === "sms" ? "Envoyer le SMS" : "Appeler"}
+                         style={{ color: "#2563eb", display: "inline-flex", padding: 1 }}>
+                        <IconSend size={12} />
+                      </a>
+                    )}
+                    {editable && (
+                      <span onClick={(e) => { e.stopPropagation(); run(() => toggleRelanceFait(r.id, !fait)); }}
+                            title={fait ? "Remettre à faire" : "Marquer comme fait"}
+                            style={{ color: fait ? "#16a34a" : "#cbd5e1", cursor: "pointer", display: "inline-flex", padding: 1 }}>
+                        <IconCheck size={12} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
               {editable && (
-                <button onClick={() => openRdvModal(p, d)} className="cell-add" style={addBtn} title="Ajouter un RDV">＋</button>
+                <div style={{ display: "flex", gap: 2 }}>
+                  <button onClick={() => openRdvModal(p, d)} className="cell-add" style={{ ...addBtn, fontSize: 10.5 }} title="Ajouter un RDV">＋ RDV</button>
+                  <button onClick={() => openRelModal(p, d)} className="cell-add" style={{ ...addBtn, fontSize: 10.5 }} title="Ajouter une relance client">＋ Relance</button>
+                </div>
               )}
             </td>
           );
@@ -282,6 +400,80 @@ export default function PlanningEditor(props: {
               <div style={modalFtr}>
                 <button type="button" onClick={() => setModal(null)} style={btnCancel}>Annuler</button>
                 <button type="submit" style={{ ...btnOk, background: headerColor }}>Affecter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL RELANCE CLIENT ══ */}
+      {modal?.kind === "relance" && (
+        <div style={overlay} onClick={() => setModal(null)}>
+          <div style={card} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...modalHdr, background: `linear-gradient(135deg, ${headerColor}, ${headerColor}cc)` }}>
+              <div style={{ fontSize: 11, opacity: 0.8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {modal.relId ? "Modifier la relance" : "Nouvelle relance client"}
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 18, marginTop: 2 }}>{modal.pnom}</div>
+            </div>
+            <form onSubmit={submitRelance} style={{ padding: "20px 22px 18px", maxHeight: "72vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={lbl}>Date <span style={{ color: "#d0212f" }}>*</span></label>
+                  <input type="date" required value={relDate} onChange={(e) => setRelDate(e.target.value)} style={inp} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={lbl}>Heure</label>
+                  <input type="time" value={relHeure} onChange={(e) => setRelHeure(e.target.value)} style={inp} />
+                </div>
+              </div>
+
+              <label style={lbl}>Client <span style={{ color: "#d0212f" }}>*</span></label>
+              <input autoFocus required value={relClient} onChange={(e) => setRelClient(e.target.value)}
+                     placeholder="Mr DUPONT" style={{ ...inp, marginBottom: 14 }} />
+
+              <label style={lbl}>Canal de relance <span style={{ color: "#d0212f" }}>*</span></label>
+              <select value={relCanal} onChange={(e) => setRelCanal(e.target.value as CanalRelance)} style={{ ...inp, marginBottom: 14 }}>
+                <option value="email">✉️ Email</option>
+                <option value="telephone">📞 Téléphone</option>
+                <option value="sms">💬 SMS</option>
+              </select>
+
+              {relCanal === "email" ? (
+                <>
+                  <label style={lbl}>Email du client <span style={{ color: "#d0212f" }}>*</span></label>
+                  <input type="email" required value={relEmail} onChange={(e) => setRelEmail(e.target.value)}
+                         placeholder="client@email.com" style={{ ...inp, marginBottom: 14 }} />
+                  <label style={lbl}>Objet de l&apos;email</label>
+                  <input value={relObjet} onChange={(e) => setRelObjet(e.target.value)}
+                         placeholder="D2B Rénovation — Votre projet" style={{ ...inp, marginBottom: 14 }} />
+                </>
+              ) : (
+                <>
+                  <label style={lbl}>Téléphone du client <span style={{ color: "#d0212f" }}>*</span></label>
+                  <input type="tel" required value={relTel} onChange={(e) => setRelTel(e.target.value)}
+                         placeholder="06 12 34 56 78" style={{ ...inp, marginBottom: 14 }} />
+                </>
+              )}
+
+              <label style={lbl}>{relCanal === "telephone" ? "Notes / points à aborder" : "Message"}</label>
+              <textarea value={relMsg} onChange={(e) => setRelMsg(e.target.value)} rows={4}
+                        placeholder={relCanal === "telephone"
+                          ? "Points à aborder pendant l'appel…"
+                          : "Laissez vide pour utiliser le message type D2B."}
+                        style={{ ...inp, marginBottom: 16, resize: "vertical" }} />
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {modal.relId && (
+                  <button type="button"
+                          onClick={() => { if (window.confirm("Supprimer cette relance ?")) { run(() => removeRelance(modal.relId!)); setModal(null); } }}
+                          style={{ padding: "9px 14px", border: "1px solid #fecaca", borderRadius: 10, background: "#fef2f2", color: "#dc2626", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+                    Supprimer
+                  </button>
+                )}
+                <div style={{ flex: 1 }} />
+                <button type="button" onClick={() => setModal(null)} style={btnCancel}>Annuler</button>
+                <button type="submit" style={{ ...btnOk, background: headerColor }}>Enregistrer</button>
               </div>
             </form>
           </div>

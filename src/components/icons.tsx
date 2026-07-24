@@ -140,6 +140,53 @@ export function IconPencil({ size = 14, strokeWidth }: IP) {
   );
 }
 
+/** Email */
+export function IconMail({ size = 13, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+/** Appel téléphonique */
+export function IconPhoneCall({ size = 13, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  );
+}
+
+/** SMS / message */
+export function IconMessage({ size = 13, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+/** Coche */
+export function IconCheck({ size = 13, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Envoyer */
+export function IconSend({ size = 13, strokeWidth }: IP) {
+  return (
+    <svg {...svgProps(size, strokeWidth)}>
+      <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+      <path d="m21.854 2.147-10.94 10.939" />
+    </svg>
+  );
+}
+
 /** Heure */
 export function IconClock({ size = 12, strokeWidth }: IP) {
   return (

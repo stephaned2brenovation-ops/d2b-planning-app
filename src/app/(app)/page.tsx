@@ -23,7 +23,7 @@ export default async function PlanningPage({
   const lundiISO = toISO(days[0]);
   const dimISO   = toISO(days[6]);
 
-  const [{ chantiers, affectations, rdv, presence, livraisons, prochaines }, profils, moi] = await Promise.all([
+  const [{ chantiers, affectations, rdv, presence, livraisons, prochaines, relances }, profils, moi] = await Promise.all([
     getWeek(lundiISO, dimISO),
     getProfils(),
     getMyProfil(),
@@ -138,6 +138,11 @@ export default async function PlanningPage({
             }))}
             affectations={affData}
             rdv={rdv.map((r) => ({ id: r.id, profil_id: r.profil_id, date: r.date, titre: r.titre, heure: r.heure, lieu: r.lieu ?? null }))}
+            relances={relances.map((r) => ({
+              id: r.id, profil_id: r.profil_id, date: r.date, client_nom: r.client_nom,
+              client_email: r.client_email, client_tel: r.client_tel,
+              canal: r.canal, heure: r.heure, objet: r.objet, message: r.message, statut: r.statut,
+            }))}
             presence={presence.map((p) => ({ profil_id: p.profil_id, date: p.date, lieu: p.lieu }))}
             livraisons={livraisons.map((l) => ({ date: l.date, fournisseur: l.fournisseur, description: l.description }))}
           />

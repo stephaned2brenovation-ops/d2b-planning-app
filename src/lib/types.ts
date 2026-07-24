@@ -92,6 +92,31 @@ export interface Livraison {
   chantiers?: Chantier;
 }
 
+export type CanalRelance = "email" | "telephone" | "sms";
+
+export interface Relance {
+  id: string;
+  profil_id: string;
+  chantier_id: string | null;
+  client_nom: string;
+  client_email: string | null;
+  client_tel: string | null;
+  canal: CanalRelance;
+  date: string;
+  heure: string | null;
+  objet: string | null;
+  message: string | null;
+  statut: "a_faire" | "fait";
+  fait_le: string | null;
+  envoye_le: string | null;
+}
+
+export const CANAL_LABEL: Record<CanalRelance, string> = {
+  email: "Email",
+  telephone: "Téléphone",
+  sms: "SMS",
+};
+
 export const ROLE_LABEL: Record<Role, string> = {
   direction: "Administration",
   secretariat: "Secrétariat",

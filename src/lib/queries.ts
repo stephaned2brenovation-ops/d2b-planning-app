@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Profil, Chantier, Affectation, Rdv, Presence, Livraison } from "@/lib/types";
+import type { Profil, Chantier, Affectation, Rdv, Presence, Livraison, Relance } from "@/lib/types";
 
 export async function getMyProfil(): Promise<Profil | null> {
   const supabase = createClient();
@@ -33,7 +33,7 @@ export async function getLivraisons(): Promise<Livraison[]> {
 // Toutes les données d'une semaine (du lundi au dimanche inclus)
 export async function getWeek(lundiISO: string, dimancheISO: string) {
   const supabase = createClient();
-  const [chantiers, affectations, rdv, presence, livraisons, prochaines] = await Promise.all([
+  const [chantiers, affectations, rdv, presence, livraisons, prochaines, relances] = await Promise.all([
     supabase.from("chantiers").select("*"),
     supabase
       .from("affectations")
@@ -61,6 +61,11 @@ export async function getWeek(lundiISO: string, dimancheISO: string) {
       .select("chantier_id, date")
       .gt("date", dimancheISO)
       .order("date"),
+    supabase
+      .from("relances")
+      .select("*")
+      .gte("date", lundiISO)
+      .lte("date", dimancheISO),
   ]);
   return {
     chantiers: (chantiers.data ?? []) as Chantier[],
@@ -69,6 +74,7 @@ export async function getWeek(lundiISO: string, dimancheISO: string) {
     presence: (presence.data ?? []) as Presence[],
     livraisons: (livraisons.data ?? []) as Livraison[],
     prochaines: (prochaines.data ?? []) as { chantier_id: string; date: string }[],
+    relances: (relances.data ?? []) as Relance[],
   };
 }
 

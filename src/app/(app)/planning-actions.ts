@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { Creneau, StatutChantier } from "@/lib/types";
+import type { Creneau, StatutChantier, CanalRelance } from "@/lib/types";
 
 // Affecte (ou déplace) un poseur/maçon sur un chantier, un jour donné.
 export async function assignAffectation(
@@ -72,6 +72,70 @@ export async function updateRdv(
 export async function removeRdv(id: string) {
   const supabase = createClient();
   await supabase.from("rdv").delete().eq("id", id);
+  revalidatePath("/");
+}
+
+/* ══ RELANCES CLIENTS ══
+   Envoi manuel via mailto:/tel:/sms: pour l'instant.
+   Le jour où Twilio est activé : une Edge Function lira les relances
+   canal='sms' + statut='a_faire' du jour et remplira envoye_le. */
+
+export type RelanceInput = {
+  client_nom: string;
+  client_email: string | null;
+  client_tel: string | null;
+  canal: CanalRelance;
+  date: string;
+  heure: string | null;
+  objet: string | null;
+  message: string | null;
+};
+
+export async function addRelance(profilId: string, input: RelanceInput) {
+  if (!input.client_nom.trim()) return;
+  const supabase = createClient();
+  await supabase.from("relances").insert({
+    profil_id: profilId,
+    client_nom: input.client_nom.trim(),
+    client_email: input.client_email || null,
+    client_tel: input.client_tel || null,
+    canal: input.canal,
+    date: input.date,
+    heure: input.heure || null,
+    objet: input.objet || null,
+    message: input.message || null,
+  });
+  revalidatePath("/");
+}
+
+export async function updateRelance(id: string, input: RelanceInput) {
+  if (!input.client_nom.trim()) return;
+  const supabase = createClient();
+  await supabase.from("relances").update({
+    client_nom: input.client_nom.trim(),
+    client_email: input.client_email || null,
+    client_tel: input.client_tel || null,
+    canal: input.canal,
+    date: input.date,
+    heure: input.heure || null,
+    objet: input.objet || null,
+    message: input.message || null,
+  }).eq("id", id);
+  revalidatePath("/");
+}
+
+export async function toggleRelanceFait(id: string, fait: boolean) {
+  const supabase = createClient();
+  await supabase.from("relances").update({
+    statut: fait ? "fait" : "a_faire",
+    fait_le: fait ? new Date().toISOString() : null,
+  }).eq("id", id);
+  revalidatePath("/");
+}
+
+export async function removeRelance(id: string) {
+  const supabase = createClient();
+  await supabase.from("relances").delete().eq("id", id);
   revalidatePath("/");
 }
 
