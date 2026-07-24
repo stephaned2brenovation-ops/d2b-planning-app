@@ -46,8 +46,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 18px", display: "flex", alignItems: "center", gap: 12, height: 56 }}>
           {/* Logo */}
           <a href="/" style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-            <Image src="/logo-d2b.png" alt="D2B Rénovation" height={32} width={160}
-                   style={{ objectFit: "contain", objectPosition: "left" }} priority />
+            <Image src="/logo-d2b-maison.jpg" alt="D2B Rénovation" height={40} width={162}
+                   style={{ objectFit: "contain", objectPosition: "left", display: "block" }} priority />
           </a>
 
           <div style={{ width: 1, height: 28, background: "rgba(255,255,255,.15)", margin: "0 4px" }} />
