@@ -65,7 +65,7 @@ export default function ChantierCreateForm({ equipe }: { equipe: Profil[] }) {
         <div style={overlay} onClick={annulerModal}>
           <div style={card} onClick={(e) => e.stopPropagation()}>
             <div style={modalHdr}>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Planifier la première pose</div>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>Planifier</div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>📅 Date & heure d&apos;intervention</div>
             </div>
             <form onSubmit={validerModal} style={{ padding: "18px 20px 16px" }}>
@@ -156,7 +156,7 @@ export default function ChantierCreateForm({ equipe }: { equipe: Profil[] }) {
             </div>
           ) : (
             <button type="button" onClick={ouvrirModal} style={btnPlanifier}>
-              📅 Planifier la première pose
+              📅 Planifier
             </button>
           )}
           <button type="submit" disabled={pending} style={btnAdd}>

@@ -10,6 +10,10 @@ export const METIER_OPTIONS = [
   "Comptabilité",
   "Poseur",
   "Maçon",
+  "Plombier",
+  "Électricien",
+  "Carreleur",
+  "Apprenti",
 ] as const;
 
 // Niveaux d'accès — mappés sur le champ `role` en base pour la sécurité RLS

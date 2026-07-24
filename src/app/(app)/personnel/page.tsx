@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { getMyProfil, getProfils } from "@/lib/queries";
-import { estBureau, ACCES_OPTIONS, METIER_OPTIONS, ROLE_LABEL, type Role } from "@/lib/types";
+import { estBureau, ACCES_OPTIONS, ROLE_LABEL, type Role } from "@/lib/types";
+import MetierSelect from "@/components/MetierSelect";
 import { addProfil, updateProfil, deleteProfil } from "./actions";
 import ConfirmButton from "@/components/ConfirmButton";
 import { redirect } from "next/navigation";
@@ -37,16 +38,10 @@ export default async function PersonnelPage() {
             </div>
 
             {/* Métier */}
-            <div style={{ width: 160 }}>
+            <div style={{ width: 180 }}>
               <label style={lbl}>Métier (poste)</label>
               <div style={hint}>Intitulé du poste dans l'entreprise</div>
-              <select
-                name="metier" defaultValue="Poseur"
-                title="Choisissez le poste occupé dans l'entreprise"
-                style={inp}
-              >
-                {METIER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
+              <MetierSelect defaultValue="Poseur" required />
             </div>
 
             {/* Accès / Rôle */}
@@ -140,10 +135,7 @@ export default async function PersonnelPage() {
                 <input name="nom" defaultValue={p.nom} placeholder="Prénom Nom" title="Prénom et nom de la personne" style={inp} />
 
                 {/* Métier */}
-                <select name="metier" defaultValue={p.metier ?? ""} title="Intitulé du poste dans l'entreprise" style={inp}>
-                  <option value="">— choisir un métier —</option>
-                  {METIER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
+                <MetierSelect defaultValue={p.metier} />
 
                 {/* Accès */}
                 {estMoi ? (
