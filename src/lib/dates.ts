@@ -17,7 +17,8 @@ export function isoWeek(d: Date): number {
 }
 
 export function toISO(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Composants locaux — évite le décalage UTC de toISOString() (fuseau France)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function ddmm(d: Date): string {

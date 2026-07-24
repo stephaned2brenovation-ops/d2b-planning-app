@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition, useState } from "react";
 import {
-  assignAffectation, removeAffectation, addRdv, removeRdv, setPresence,
+  assignAffectation, removeAffectation, addRdv, removeRdv,
 } from "@/app/(app)/planning-actions";
 import { STATUT_COLOR, STATUT_LABEL, type StatutChantier } from "@/lib/types";
 
@@ -24,19 +24,19 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const SEC = {
   commerciaux:   { bg: "#eff6ff", border: "#2563eb", color: "#1e3a8a", icon: "👔" },
   administration:{ bg: "#f5f3ff", border: "#7c3aed", color: "#4c1d95", icon: "📋" },
-  menuiseries:   { bg: "#fffbeb", border: "#d97706", color: "#78350f", icon: "🪟" },
-  maconnerie:    { bg: "#fef2f2", border: "#dc2626", color: "#7f1d1d", icon: "🧱" },
+  ouvriers:      { bg: "#fffbeb", border: "#d97706", color: "#78350f", icon: "🔨" },
   livraisons:    { bg: "#fff7ed", border: "#ea580c", color: "#7c2d12", icon: "🚚" },
 } as const;
 
 export default function PlanningEditor(props: {
   days: Day[];
-  commerciaux: P[]; administration: P[]; menuiseries: P[]; maconnerie: P[];
+  commerciaux: P[]; administration: P[];
+  ouvriers: { metier: string; personnes: P[] }[];
   chantiers: C[]; affectations: A[]; rdv: R[]; presence: Pr[];
   livraisons: Liv[];
   editable: boolean;
 }) {
-  const { days, chantiers, affectations, rdv, presence, livraisons, editable } = props;
+  const { days, chantiers, affectations, rdv, livraisons, editable } = props;
   const router = useRouter();
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
@@ -176,9 +176,6 @@ export default function PlanningEditor(props: {
       </tr>
     ));
   }
-
-  const presOf = (pid: string, iso: string) =>
-    presence.find((p) => p.profil_id === pid && p.date === iso)?.lieu ?? "";
 
   const headerColor = modal?.pcouleur ?? "#39424e";
 
@@ -326,15 +323,18 @@ export default function PlanningEditor(props: {
               {rdvRows(props.administration)}
             </>}
 
-            {/* MENUISERIES */}
-            <SectionRow label="Menuiseries Extérieures" s={SEC.menuiseries} />
-            {poseurRows(props.menuiseries)}
-
-            {/* MAÇONNERIE */}
-            {props.maconnerie.length > 0 && <>
-              <SectionRow label="Maçonnerie Général" s={SEC.maconnerie} />
-              {poseurRows(props.maconnerie)}
-            </>}
+            {/* OUVRIERS DU BÂTIMENT — groupés par métier */}
+            <SectionRow label="Ouvriers du bâtiment" s={SEC.ouvriers} />
+            {props.ouvriers.length === 0 && (
+              <tr><td style={tdLbl}>—</td>
+                <td colSpan={7} style={{ ...td, color: "#c4cad4", fontStyle: "italic", fontSize: 12 }}>Aucun</td>
+              </tr>
+            )}
+            {props.ouvriers.map((groupe) => (
+              <MetierRows key={groupe.metier} metier={groupe.metier}>
+                {poseurRows(groupe.personnes)}
+              </MetierRows>
+            ))}
 
             {/* LIVRAISONS */}
             <SectionRow label="Livraisons fournisseurs" s={SEC.livraisons} />
@@ -363,6 +363,24 @@ export default function PlanningEditor(props: {
         </table>
       </div>
     </div>
+  );
+}
+
+function MetierRows({ metier, children }: { metier: string; children: React.ReactNode }) {
+  return (
+    <>
+      <tr>
+        <td colSpan={8} style={{
+          background: "#fefce8", padding: "3px 14px 3px 26px",
+          fontSize: 10.5, fontWeight: 700, color: "#a16207",
+          textTransform: "uppercase", letterSpacing: 0.6,
+          borderLeft: "4px solid #fcd34d",
+        }}>
+          {metier}
+        </td>
+      </tr>
+      {children}
+    </>
   );
 }
 

@@ -1,22 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { mondayOf, mondayOfISOWeek, weeksInYear, toISO, weekLabel, isoWeek } from "@/lib/dates";
 
 export default function WeekNav({ refISO }: { refISO: string }) {
   const router = useRouter();
+  const params = useSearchParams();
   const ref    = new Date(refISO + "T00:00:00");
   const curW   = isoWeek(ref);
   const curY   = ref.getFullYear();
 
+  function push(weekISO: string | null) {
+    const p = new URLSearchParams(params.toString());
+    if (weekISO) p.set("week", weekISO); else p.delete("week");
+    router.push(`/?${p.toString()}`);
+  }
+
   function go(deltaWeeks: number) {
     const m = mondayOf(ref);
     m.setDate(m.getDate() + deltaWeeks * 7);
-    router.push(`/?week=${toISO(m)}`);
+    push(toISO(m));
   }
 
   function onSelect(e: React.ChangeEvent<HTMLSelectElement>) {
-    router.push(`/?week=${e.target.value}`);
+    push(e.target.value);
   }
 
   // Générer toutes les semaines : année précédente + année courante + année suivante

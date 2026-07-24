@@ -83,6 +83,29 @@ export async function updateChantier(formData: FormData) {
     notes:        String(formData.get("notes")         || "") || null,
     equipe_ids,
   }).eq("id", id);
+
+  // Re-planification optionnelle : si une plage est fournie, créer les affectations
+  const date_debut = String(formData.get("date_debut") || "").trim();
+  if (date_debut && equipe_ids.length > 0) {
+    const date_fin     = String(formData.get("date_fin") || "").trim() || date_debut;
+    const ouvrables    = formData.get("ouvrables") !== "false";
+    const heure_pose   = String(formData.get("heure_pose")   || "").trim() || null;
+    const lieu_pose    = String(formData.get("lieu_pose")    || "").trim() || null;
+    const creneau_pose = (String(formData.get("creneau_pose") || "journee")) as "journee" | "matin" | "apres_midi";
+    const dates = plage(date_debut, date_fin, ouvrables);
+    if (dates.length > 0) {
+      await supabase.from("affectations").upsert(
+        dates.flatMap((date) =>
+          equipe_ids.map((pid) => ({
+            profil_id: pid, chantier_id: id, date,
+            creneau: creneau_pose, heure: heure_pose, lieu: lieu_pose,
+          }))
+        ),
+        { onConflict: "profil_id,date,creneau" }
+      );
+    }
+  }
+
   revalidatePath("/chantiers");
   revalidatePath("/");
 }

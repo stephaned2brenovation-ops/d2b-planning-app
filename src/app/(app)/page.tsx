@@ -36,23 +36,33 @@ export default async function PlanningPage({
   // ── Groupement équipes ──
   const byMetier = (m: string) => slim(profils.filter((p) => p.metier === m));
 
-  // Terrain = role poseur (tous métiers hors direction/sécrétariat/compta/commercial)
-  // Maçons = role macon (ou métier Maçon)
   const commerciaux    = [...byMetier("Commercial"), ...byMetier("Direction")];
   const administration = [...byMetier("Secrétariat"), ...byMetier("Comptabilité")];
-  const menuiseries    = slim(profils.filter((p) => p.role === "poseur")); // Poseur, Plombier, Élec…
-  const maconnerie     = slim(profils.filter((p) => p.role === "macon"));
+
+  // Ouvriers du bâtiment = personnel terrain (role poseur ou macon), classés par métier
+  const terrain = profils.filter((p) => p.role === "poseur" || p.role === "macon");
+  const ORDRE_METIER = ["Poseur", "Maçon", "Plombier", "Électricien", "Carreleur", "Apprenti"];
+  const metiersPresents = Array.from(new Set(terrain.map((p) => p.metier || "Autre")));
+  metiersPresents.sort((a, b) => {
+    const ia = ORDRE_METIER.indexOf(a); const ib = ORDRE_METIER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  const ouvriers = metiersPresents.map((metier) => ({
+    metier,
+    personnes: slim(terrain.filter((p) => (p.metier || "Autre") === metier)),
+  }));
 
   // Équipe terrain pour la vue chantiers (avec métier pour affichage)
-  const equipe = slimFull(profils.filter((p) => p.role === "poseur" || p.role === "macon"));
+  const equipe = slimFull(terrain);
 
   const daysData = days.map((d, i) => ({
     iso: toISO(d), label: JOURS[i], ddmm: ddmm(d), weekend: i > 4,
   }));
 
   const chantiersData = chantiers.map((c) => ({
-    id: c.id, client_nom: c.client_nom, ville: c.ville,
-    designation: c.designation, statut: c.statut,
+    id: c.id, client_nom: c.client_nom, ville: c.ville, adresse: c.adresse,
+    designation: c.designation, contact_tel: c.contact_tel, statut: c.statut,
+    renfort: c.renfort ?? false, notes: c.notes ?? null,
     equipe_ids: c.equipe_ids ?? [],
   }));
 
@@ -117,8 +127,7 @@ export default async function PlanningPage({
             days={daysData}
             commerciaux={commerciaux}
             administration={administration}
-            menuiseries={menuiseries}
-            maconnerie={maconnerie}
+            ouvriers={ouvriers}
             chantiers={chantiers.map((c) => ({
               id: c.id, client_nom: c.client_nom, ville: c.ville,
               adresse: c.adresse, designation: c.designation, statut: c.statut,
