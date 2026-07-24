@@ -3,39 +3,65 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+/** Génère toutes les dates entre debut et fin (inclus).
+ *  Si ouvrables=true, ignore samedis (6) et dimanches (0). */
+function plage(debut: string, fin: string, ouvrables: boolean): string[] {
+  const dates: string[] = [];
+  const cur = new Date(debut + "T00:00:00");
+  const end = new Date(fin + "T00:00:00");
+  while (cur <= end) {
+    const dow = cur.getDay();
+    if (!ouvrables || (dow !== 0 && dow !== 6)) {
+      dates.push(cur.toISOString().slice(0, 10));
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
 export async function addChantier(formData: FormData) {
   const client_nom = String(formData.get("client_nom") || "").trim();
   if (!client_nom) return;
-  const equipe_ids = formData.getAll("equipe_ids").map(String).filter(Boolean);
-  const date_pose  = String(formData.get("date_pose") || "").trim();
-  const heure_pose = String(formData.get("heure_pose") || "").trim() || null;
-  const lieu_pose  = String(formData.get("lieu_pose") || "").trim() || null;
-  const creneau_pose = (String(formData.get("creneau_pose") || "journee")) as "journee" | "matin" | "apres_midi";
+
+  const equipe_ids    = formData.getAll("equipe_ids").map(String).filter(Boolean);
+  const date_debut    = String(formData.get("date_debut") || "").trim();
+  const date_fin      = String(formData.get("date_fin")   || "").trim() || date_debut;
+  const ouvrables     = formData.get("ouvrables") !== "false"; // true par défaut
+  const heure_pose    = String(formData.get("heure_pose")    || "").trim() || null;
+  const lieu_pose     = String(formData.get("lieu_pose")     || "").trim() || null;
+  const creneau_pose  = (String(formData.get("creneau_pose") || "journee")) as "journee" | "matin" | "apres_midi";
+  const notes         = String(formData.get("notes") || "").trim() || null;
 
   const supabase = createClient();
   const { data: chantier } = await supabase.from("chantiers").insert({
     client_nom,
-    designation: String(formData.get("designation") || "") || null,
-    ville: String(formData.get("ville") || "") || null,
-    adresse: String(formData.get("adresse") || "") || null,
-    contact_tel: String(formData.get("contact_tel") || "") || null,
-    statut: String(formData.get("statut") || "a_planifier"),
-    renfort: formData.get("renfort") === "on",
+    designation:  String(formData.get("designation")  || "") || null,
+    ville:        String(formData.get("ville")         || "") || null,
+    adresse:      String(formData.get("adresse")       || "") || null,
+    contact_tel:  String(formData.get("contact_tel")   || "") || null,
+    statut:       String(formData.get("statut")        || "a_planifier"),
+    renfort:      formData.get("renfort") === "on",
+    notes,
     equipe_ids,
   }).select("id").single();
 
-  // Si une date de pose est planifiée, créer les affectations pour chaque membre d'équipe
-  if (chantier && date_pose && equipe_ids.length > 0) {
-    await supabase.from("affectations").insert(
-      equipe_ids.map((pid) => ({
-        profil_id: pid,
-        chantier_id: chantier.id,
-        date: date_pose,
-        creneau: creneau_pose,
-        heure: heure_pose,
-        lieu: lieu_pose,
-      }))
-    );
+  // Créer une affectation par jour × par membre d'équipe
+  if (chantier && date_debut && equipe_ids.length > 0) {
+    const dates = plage(date_debut, date_fin, ouvrables);
+    if (dates.length > 0) {
+      await supabase.from("affectations").insert(
+        dates.flatMap((date) =>
+          equipe_ids.map((pid) => ({
+            profil_id: pid,
+            chantier_id: chantier.id,
+            date,
+            creneau: creneau_pose,
+            heure: heure_pose,
+            lieu: lieu_pose,
+          }))
+        )
+      );
+    }
   }
 
   revalidatePath("/chantiers");
@@ -47,13 +73,14 @@ export async function updateChantier(formData: FormData) {
   const equipe_ids = formData.getAll("equipe_ids").map(String).filter(Boolean);
   const supabase = createClient();
   await supabase.from("chantiers").update({
-    client_nom: String(formData.get("client_nom") || "").trim(),
-    designation: String(formData.get("designation") || "") || null,
-    ville: String(formData.get("ville") || "") || null,
-    adresse: String(formData.get("adresse") || "") || null,
-    contact_tel: String(formData.get("contact_tel") || "") || null,
-    statut: String(formData.get("statut") || "a_planifier"),
-    renfort: formData.get("renfort") === "on",
+    client_nom:   String(formData.get("client_nom")   || "").trim(),
+    designation:  String(formData.get("designation")  || "") || null,
+    ville:        String(formData.get("ville")         || "") || null,
+    adresse:      String(formData.get("adresse")       || "") || null,
+    contact_tel:  String(formData.get("contact_tel")   || "") || null,
+    statut:       String(formData.get("statut")        || "a_planifier"),
+    renfort:      formData.get("renfort") === "on",
+    notes:        String(formData.get("notes")         || "") || null,
     equipe_ids,
   }).eq("id", id);
   revalidatePath("/chantiers");

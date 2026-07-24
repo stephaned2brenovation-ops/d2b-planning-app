@@ -95,6 +95,26 @@ export async function copyPreviousWeek(formData: FormData) {
   revalidatePath("/");
 }
 
+// Affecte plusieurs profils sur un même chantier pour un jour donné (depuis la vue chantiers)
+export async function assignEquipeChantier(
+  chantierId: string,
+  profilIds: string[],
+  date: string,
+  creneau: Creneau = "journee",
+  heure: string | null = null,
+  lieu: string | null = null,
+) {
+  if (!profilIds.length) return;
+  const supabase = createClient();
+  await supabase.from("affectations").upsert(
+    profilIds.map((pid) => ({
+      profil_id: pid, chantier_id: chantierId, date, creneau, heure, lieu,
+    })),
+    { onConflict: "profil_id,date,creneau" },
+  );
+  revalidatePath("/");
+}
+
 // Présence magasin (Stéphane / Max au showroom)
 export async function setPresence(profilId: string, date: string, lieu: "magasin" | "rdv_ext" | "") {
   const supabase = createClient();

@@ -1,183 +1,205 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useRef, useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addChantier } from "@/app/(app)/chantiers/actions";
-import type { StatutChantier } from "@/lib/types";
-import { STATUT_LABEL } from "@/lib/types";
+import { STATUT_LABEL, type StatutChantier } from "@/lib/types";
 
-type Profil = { id: string; nom: string; couleur: string | null };
-type Creneau = "journee" | "matin" | "apres_midi";
-
+type Profil = { id: string; nom: string; couleur: string | null; metier: string | null };
 const STATUTS: StatutChantier[] = ["a_planifier", "en_cours", "termine", "sav"];
 
 export default function ChantierCreateForm({ equipe }: { equipe: Profil[] }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const router  = useRouter();
+  const router = useRouter();
   const [pending, start] = useTransition();
+  const [selEquipe, setSelEquipe] = useState<Set<string>>(new Set());
 
-  // Modal calendrier
-  const [modal, setModal] = useState(false);
-  const [datePose,    setDatePose]    = useState("");
-  const [heurePose,   setHeurePose]   = useState("");
-  const [lieuPose,    setLieuPose]    = useState("");
-  const [creneauPose, setCreneauPose] = useState<Creneau>("journee");
-  const [poseOk,      setPoseOk]      = useState(false);
-
-  function ouvrirModal() {
-    if (!datePose) {
-      const today = new Date();
-      setDatePose(today.toISOString().slice(0, 10));
-    }
-    setModal(true);
-  }
-
-  function validerModal(e: React.FormEvent) {
-    e.preventDefault();
-    if (!datePose) return;
-    setPoseOk(true);
-    setModal(false);
-  }
-
-  function annulerModal() {
-    setModal(false);
-  }
-
-  function effacerPose() {
-    setDatePose(""); setHeurePose(""); setLieuPose(""); setCreneauPose("journee"); setPoseOk(false);
+  function toggleMembre(id: string) {
+    setSelEquipe((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const fd = new FormData(e.currentTarget);
+    // Injecter les ids sélectionnés (les checkboxes sont gérés par React state)
+    selEquipe.forEach((id) => fd.append("equipe_ids", id));
     start(async () => {
-      await addChantier(formData);
+      await addChantier(fd);
       formRef.current?.reset();
-      effacerPose();
+      setSelEquipe(new Set());
       router.refresh();
     });
   }
 
   return (
-    <>
-      {/* ── Modal calendrier ── */}
-      {modal && (
-        <div style={overlay} onClick={annulerModal}>
-          <div style={card} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHdr}>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Planifier</div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>📅 Date & heure d&apos;intervention</div>
-            </div>
-            <form onSubmit={validerModal} style={{ padding: "18px 20px 16px" }}>
-              <label style={lbl}>Date <span style={{ color: "#d0212f" }}>*</span></label>
-              <input type="date" required value={datePose} onChange={(e) => setDatePose(e.target.value)}
-                     style={{ ...inp, marginBottom: 12 }} />
+    <form ref={formRef} onSubmit={handleSubmit} style={{ opacity: pending ? 0.65 : 1, transition: "opacity .2s" }}>
 
-              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={lbl}>Heure de départ</label>
-                  <input type="time" value={heurePose} onChange={(e) => setHeurePose(e.target.value)} style={inp} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={lbl}>Créneau</label>
-                  <select value={creneauPose} onChange={(e) => setCreneauPose(e.target.value as Creneau)} style={inp}>
-                    <option value="journee">Journée entière</option>
-                    <option value="matin">Matin</option>
-                    <option value="apres_midi">Après-midi</option>
-                  </select>
-                </div>
-              </div>
-
-              <label style={lbl}>Lieu / Adresse</label>
-              <input value={lieuPose} onChange={(e) => setLieuPose(e.target.value)}
-                     placeholder="Adresse du chantier…" style={{ ...inp, marginBottom: 14 }} />
-
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button type="button" onClick={annulerModal} style={btnCancel}>Annuler</button>
-                <button type="submit" style={btnOk}>Confirmer</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Formulaire chantier ── */}
-      <form ref={formRef} onSubmit={handleSubmit} style={{ opacity: pending ? 0.6 : 1 }}>
-        {/* Champs cachés pose */}
-        <input type="hidden" name="date_pose"    value={datePose} />
-        <input type="hidden" name="heure_pose"   value={heurePose} />
-        <input type="hidden" name="lieu_pose"    value={lieuPose} />
-        <input type="hidden" name="creneau_pose" value={creneauPose} />
-
-        <div style={grid}>
-          <input name="client_nom" placeholder="Client *" required style={inp2} />
-          <input name="designation" placeholder="Désignation (ex : 1F 2vtx)" style={inp2} />
-          <input name="ville" placeholder="Ville" style={inp2} />
-          <input name="adresse" placeholder="Adresse (itinéraire)" style={inp2} />
-          <input name="contact_tel" placeholder="Tél. contact" style={inp2} />
-          <select name="statut" defaultValue="a_planifier" style={inp2}>
-            {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
-          </select>
-          <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+      {/* ── INFORMATIONS ── */}
+      <div style={section}>
+        <SectionTitle>📋 Informations du chantier</SectionTitle>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <Field label="Client *" style={{ minWidth: 160, flex: 2 }}>
+            <input name="client_nom" required placeholder="Nom du client" style={inp} />
+          </Field>
+          <Field label="Désignation" style={{ minWidth: 140, flex: 2 }}>
+            <input name="designation" placeholder="Ex : 1F 2vtx, Baie coulissante…" style={inp} />
+          </Field>
+          <Field label="Ville" style={{ minWidth: 110, flex: 1 }}>
+            <input name="ville" placeholder="Toulon, Hyères…" style={inp} />
+          </Field>
+          <Field label="Adresse" style={{ minWidth: 180, flex: 2 }}>
+            <input name="adresse" placeholder="Rue + n° (pour l'itinéraire)" style={inp} />
+          </Field>
+          <Field label="Tél. contact" style={{ minWidth: 120 }}>
+            <input name="contact_tel" placeholder="06 …" style={inp} />
+          </Field>
+          <Field label="Statut" style={{ minWidth: 120 }}>
+            <select name="statut" defaultValue="a_planifier" style={inp}>
+              {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
+            </select>
+          </Field>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, whiteSpace: "nowrap", paddingBottom: 2 }}>
             <input type="checkbox" name="renfort" /> Renfort (RE)
           </label>
         </div>
+      </div>
 
-        {/* Équipe */}
-        {equipe.length > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7686", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.4 }}>
-              Équipe (poseurs / maçons)
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {equipe.map((p) => (
-                <label key={p.id} style={checkLbl}>
-                  <input type="checkbox" name="equipe_ids" value={p.id} />
-                  <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 5, background: p.couleur ?? "#6b7686", marginRight: 4 }} />
+      {/* ── ÉQUIPE ── */}
+      <div style={section}>
+        <SectionTitle>👷 Équipe assignée</SectionTitle>
+        {equipe.length === 0 ? (
+          <p style={{ color: "#9aa3ad", fontSize: 13, margin: 0 }}>Aucun membre terrain — ajoutez du personnel d&apos;abord.</p>
+        ) : (
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            {equipe.map((p) => {
+              const sel = selEquipe.has(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggleMembre(p.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "6px 12px",
+                    border: sel ? `2px solid ${p.couleur ?? "#2563eb"}` : "2px solid #e7e9ee",
+                    borderRadius: 20,
+                    background: sel ? (p.couleur ?? "#2563eb") + "18" : "#fafbfc",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: sel ? 700 : 400,
+                    color: sel ? (p.couleur ?? "#2563eb") : "#39424e",
+                    transition: "all .15s",
+                  }}
+                >
+                  <span style={{
+                    width: 11, height: 11, borderRadius: "50%",
+                    background: p.couleur ?? "#6b7686",
+                    flexShrink: 0,
+                    outline: sel ? `2px solid ${p.couleur ?? "#2563eb"}` : "none",
+                    outlineOffset: 1,
+                  }} />
                   {p.nom}
-                </label>
-              ))}
-            </div>
+                  {p.metier && <span style={{ fontSize: 11, opacity: 0.65 }}>· {p.metier}</span>}
+                </button>
+              );
+            })}
           </div>
         )}
+        {selEquipe.size > 0 && (
+          <div style={{ marginTop: 8, fontSize: 12, color: "#2563eb" }}>
+            ✓ {selEquipe.size} personne{selEquipe.size > 1 ? "s" : ""} sélectionnée{selEquipe.size > 1 ? "s" : ""}
+          </div>
+        )}
+      </div>
 
-        {/* Planifier la pose */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
-          {poseOk ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#eef4ff", borderRadius: 8, padding: "6px 12px", fontSize: 13 }}>
-              <span>📅</span>
-              <span style={{ fontWeight: 600, color: "#2e77c9" }}>
-                {new Date(datePose + "T00:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-                {heurePose ? ` à ${heurePose}` : ""}
-                {lieuPose ? ` — ${lieuPose}` : ""}
-              </span>
-              <button type="button" onClick={effacerPose} style={{ border: 0, background: "none", color: "#d0212f", cursor: "pointer", fontSize: 14, lineHeight: 1 }}>✕</button>
-              <button type="button" onClick={ouvrirModal} style={{ border: "1px solid #2e77c9", background: "#fff", color: "#2e77c9", borderRadius: 6, padding: "2px 8px", fontSize: 12, cursor: "pointer" }}>Modifier</button>
-            </div>
-          ) : (
-            <button type="button" onClick={ouvrirModal} style={btnPlanifier}>
-              📅 Planifier
-            </button>
-          )}
-          <button type="submit" disabled={pending} style={btnAdd}>
-            {pending ? "Création…" : "+ Créer le chantier"}
-          </button>
+      {/* ── PLANIFICATION ── */}
+      <div style={section}>
+        <SectionTitle>📅 Planification des interventions</SectionTitle>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <Field label="Du" style={{ minWidth: 140 }}>
+            <input type="date" name="date_debut" style={inp} />
+          </Field>
+          <div style={{ display: "flex", alignItems: "center", paddingBottom: 2, fontSize: 20, color: "#94a3b8" }}>→</div>
+          <Field label="Au (inclus)" style={{ minWidth: 140 }}>
+            <input type="date" name="date_fin" style={inp} />
+          </Field>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, paddingBottom: 2, whiteSpace: "nowrap" }}>
+            <input type="checkbox" name="ouvrables" defaultChecked onChange={(e) => {
+              const form = e.currentTarget.form;
+              if (form) {
+                const hidden = form.querySelector('input[name="ouvrables_val"]') as HTMLInputElement;
+                if (hidden) hidden.value = e.target.checked ? "true" : "false";
+              }
+            }} />
+            Jours ouvrables uniquement
+          </label>
+          <input type="hidden" name="ouvrables" value="true" />
         </div>
-      </form>
-    </>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", marginTop: 10 }}>
+          <Field label="Heure de départ" style={{ minWidth: 120 }}>
+            <input type="time" name="heure_pose" style={inp} />
+          </Field>
+          <Field label="Créneau" style={{ minWidth: 160 }}>
+            <select name="creneau_pose" defaultValue="journee" style={inp}>
+              <option value="journee">Journée entière</option>
+              <option value="matin">Matin</option>
+              <option value="apres_midi">Après-midi</option>
+            </select>
+          </Field>
+          <Field label="Lieu / Adresse de pose" style={{ flex: 1, minWidth: 200 }}>
+            <input name="lieu_pose" placeholder="Adresse du chantier…" style={inp} />
+          </Field>
+        </div>
+
+        <div style={{ marginTop: 8, fontSize: 12, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4 }}>
+          ℹ️ Les affectations sont créées automatiquement pour chaque jour et chaque membre sélectionné.
+        </div>
+      </div>
+
+      {/* ── SUBMIT ── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+        <button type="submit" disabled={pending} style={btnAdd}>
+          {pending ? "Création en cours…" : "+ Créer le chantier"}
+        </button>
+      </div>
+    </form>
   );
 }
 
-const grid: React.CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" };
-const inp: React.CSSProperties  = { width: "100%", padding: "9px 11px", border: "1px solid #e7e9ee", borderRadius: 9, fontSize: 13, boxSizing: "border-box" };
-const inp2: React.CSSProperties = { padding: "8px 10px", border: "1px solid #e7e9ee", borderRadius: 8, fontSize: 13 };
-const checkLbl: React.CSSProperties = { display: "flex", alignItems: "center", gap: 4, fontSize: 13, padding: "5px 10px", border: "1px solid #e7e9ee", borderRadius: 8, cursor: "pointer", background: "#fafbfc" };
-const lbl: React.CSSProperties  = { display: "block", fontSize: 12, fontWeight: 600, color: "#39424e", marginBottom: 4 };
-const overlay: React.CSSProperties = { position: "fixed", inset: 0, background: "rgba(20,30,50,.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" };
-const card: React.CSSProperties    = { background: "#fff", borderRadius: 16, width: 400, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" };
-const modalHdr: React.CSSProperties = { padding: "16px 20px", background: "#39424e", color: "#fff" };
-const btnCancel: React.CSSProperties = { padding: "9px 16px", border: "1px solid #e7e9ee", borderRadius: 10, background: "#fff", cursor: "pointer", fontSize: 13, color: "#6b7686" };
-const btnOk: React.CSSProperties    = { padding: "9px 20px", border: 0, borderRadius: 10, color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, background: "#39424e" };
-const btnAdd: React.CSSProperties   = { border: 0, background: "#1f9d55", color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const btnPlanifier: React.CSSProperties = { border: "1px dashed #2e77c9", background: "#f0f6ff", color: "#2e77c9", borderRadius: 8, padding: "7px 13px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: 12, fontWeight: 700, color: "#39424e", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>
+      {children}
+    </div>
+  );
+}
 
+function Field({ label, children, style }: { label: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={style}>
+      <label style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "#6b7686", marginBottom: 4 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const section: React.CSSProperties = {
+  background: "#fafbfc",
+  border: "1px solid #e7e9ee",
+  borderRadius: 10,
+  padding: "12px 14px",
+  marginBottom: 10,
+};
+const inp: React.CSSProperties = {
+  padding: "8px 10px", border: "1px solid #e7e9ee", borderRadius: 8,
+  fontSize: 13, width: "100%", boxSizing: "border-box", background: "#fff",
+};
+const btnAdd: React.CSSProperties = {
+  border: 0, background: "#1f9d55", color: "#fff",
+  borderRadius: 9, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+};
